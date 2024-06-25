@@ -8,7 +8,10 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 tqdm = "^4.66.4"
+anyreadline = "^0.1.1"
 
+[tool.poetry.scripts]
+mfbatch = 'mfbatch.__main__:main'
 
 [build-system]
 requires = ["poetry-core"]

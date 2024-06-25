@@ -8,7 +8,10 @@ from re import match
 from optparse import OptionParser
 import shlex
 
+from typing import List
+
 from tqdm import tqdm
+import readline
 
 # MFBATCH COMMAND FILE
 # Every line is processed, the first character decides the kind of command 
@@ -27,7 +30,7 @@ from tqdm import tqdm
 #   set-incr KEY INITIAL
 #       KEY in next file will be set to INITIAL which will be incremented by 
 #       one for each file processed.
-#   set-pattern TO FROM PATTERN 
+#   set-pattern TO FROM PATTERN REPL 
 #       Set key TO to FROM after matching against PATTERN in each subsequent 
 #       file.
 #   rename ARGUMENTS
@@ -39,6 +42,16 @@ from tqdm import tqdm
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
 COMMAND_PROCHAR = ':'
 COMMENT_PROCHAR = '#'
+
+
+class CommandEnv:
+    metadatums: dict
+    incr: List[str]
+
+    def __init__(self) -> None:
+        self.metadatums = dict()
+        self.incr = []
+
 
 def process_command(metadatums: dict, line: str, dry_run: bool):
     commandline = line.lstrip(COMMAND_PROCHAR).rstrip("\n")
@@ -61,10 +74,13 @@ def process_command(metadatums: dict, line: str, dry_run: bool):
             
     elif command == 'set-incr':
         pass 
+
     elif command == 'set-pattern':
         pass
+    
     elif command == 'rename':
         pass
+    
     else:
         sys.stderr.write(f"Unrecognized command line: {line}\n")
 
@@ -72,8 +88,9 @@ def process_command(metadatums: dict, line: str, dry_run: bool):
 def process_file(metadatums: dict, line: str, dry_run: bool):
     line = line.rstrip("\n")
     if dry_run:
-        sys.stderr.write(f"process_file: {line}\n")
-        sys.stderr.write(f"process_file: {metadatums}\n")
+        sys.stderr.write(f"Would process file: {line}\n")
+        for key in metadatums.keys():
+            sys.stderr.write(f" > Set {key}: {metadatums[key]}\n")
     else:
         pass
 
@@ -99,34 +116,14 @@ def execute_batch_list(batch_list_path: str, dry_run: bool):
                 process_file(metadatums, line, dry_run)
 
 
-
-if __name__ == "__main__":
-    
-    editor = os.getenv('EDITOR')
-
-    op = OptionParser(usage="%prog [options]")
-    op.add_option('-d', metavar='DIR',
-                  help='chdir to DIR before running',
-                  default=None) 
-    op.add_option('-e', metavar='EDITOR',
-                  help="Set editor (default is $EDITOR)",
-                  default=editor)
-    op.add_option('-f', metavar='FILE',
-                  help="Write batch list file to FILE",
-                  default='MFBATCH_LIST')
-    options, args = op.parse_args()
-
-    if options.d is not None:
-        os.chdir(options.d)
-
-    command_file = options.f 
-
+def create_cwd_batch_list(command_file: str):
     with open(command_file, mode='w') as f:
         f.write("# mfbatch\n\n")
         metaflac_command = [METAFLAC_PATH, '--list']
         metadatums = {}
         preflight = len(list(iglob('./**/*.flac', recursive=True)))
-        for path in tqdm(iglob('./**/*.flac', recursive=True), total=preflight):
+        for path in tqdm(iglob('./**/*.flac', recursive=True), 
+                         total=preflight):
             result = run(metaflac_command + [path], capture_output=True)
             this_file_metadata = {}
             for line in result.stdout.decode('utf-8').splitlines():
@@ -136,11 +133,14 @@ if __name__ == "__main__":
 
             for this_key in this_file_metadata.keys():
                 if this_key not in metadatums:
-                    f.write(f":set {this_key} {shlex.quote(this_file_metadata[this_key])}\n")
+                    f.write(f":set {this_key} "
+                            "{shlex.quote(this_file_metadata[this_key])}\n")
                     metadatums[this_key] = this_file_metadata[this_key]
                 else:
                     if this_file_metadata[this_key] != metadatums[this_key]:
-                        f.write(f":set {this_key} {shlex.quote(this_file_metadata[this_key])}\n")
+                        f.write(f":set {this_key} "
+                                "{shlex.quote(this_file_metadata[this_key])}"
+                                "\n")
                         metadatums[this_key] = this_file_metadata[this_key]
 
             keys = list(metadatums.keys())
@@ -150,16 +150,47 @@ if __name__ == "__main__":
                     del metadatums[key]
 
             f.write(path + "\n\n")
+
+
+def main():
+    op = OptionParser(usage="%prog [-c] [-W] [options]")
     
-    # list_stat = os.stat(command_file)
+    op.add_option('-c', '--create',
+                             action='store_true',
+                             help='Create a new list')
+    op.add_option('-W', '--write', default=False, 
+                  action='store_true',
+                  help="Execute batch list, write to files")
+    op.add_option('-p', '--path', metavar='DIR',
+                  help='chdir to DIR before running',
+                  default=None) 
+    op.add_option('-e', '--edit', action='store_true',
+                  help="Open batch file in the default editor",
+                  default=False)
+    op.add_option('-f', '--batchfile', metavar='FILE',
+                  help="Use batch list FILE for reading and writing instead "
+                  "of the default \"MFBATCH_LIST\"",
+                  default='MFBATCH_LIST')
 
-    editor_command = [options.e, command_file]
-    run(editor_command)
+    options, _ = op.parse_args()
 
-    execute_batch_list(command_file, dry_run=True)
+    if options.path is not None:
+        os.chdir(options.path)
 
-    # new_stat = os.stat(command_file)
+    command_file = options.batchfile 
+    
+    if options.create:
+        create_cwd_batch_list(command_file)
+
+    if options.edit:
+        editor_command = [os.getenv('EDITOR'), command_file]
+        run(editor_command)
+
+    if options.write:
+        execute_batch_list(command_file, dry_run=True)
 
 
+if __name__ == "__main__":
+    main()
     
 
