@@ -9,7 +9,7 @@ from optparse import OptionParser
 import shlex
 import shutil
 
-from typing import List
+from typing import Set 
 
 
 from mfbatch.util import readline_with_escaped_newlines
@@ -25,17 +25,22 @@ from tqdm import tqdm
 # # is a comment
 
 # Commands are: 
-#   set KEY REST 
-#       KEY in each subsequent file is set to REST. 
+#   set KEY VAL +
+#       KEY in each subsequent file is set to VAL. $-keys in VAL will be 
+#       substituted.
+#   d VAL +
+#       An alias for :set DESCRIPTION
 #   unset KEY 
 #       KEY in each subsequent file will be unset.
 #   unset-all 
 #       No keys in each subsequent file will be set.
-#   set-incr KEY INITIAL
+#   set+ KEY INITIAL
 #       KEY in next file will be set to INITIAL which will be incremented by 
 #       one for each file processed.
 
-
+# Commands to be implemented are:
+#   set1 KEY VAL 
+#       KEY in the next file (and only the next file) is set to VAL.
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
 COMMAND_LEADER = ':'
@@ -44,11 +49,20 @@ COMMENT_LEADER = '#'
 
 class CommandEnv:
     metadatums: dict
-    incr: List[str]
+    incr: Set[str]
 
     def __init__(self) -> None:
         self.metadatums = dict()
-        self.incr = []
+        self.incr = set()
+
+
+def render_substitutions(env: CommandEnv, in_str: str) -> str: 
+    # for key in env.metadatums.keys():
+    #     val = env.metadatums[key]
+    #     needle = "$" + key 
+    #     in_str = in_str.replace(needle,val)
+    #
+    return in_str
 
 
 def handle_command(env: CommandEnv, line: str, dry_run: bool):
@@ -61,20 +75,25 @@ def handle_command(env: CommandEnv, line: str, dry_run: bool):
         value = args[2]
         env.metadatums[key] = value
     
+    elif command == 'd':
+        env.metadatums['DESCRIPTION'] = args[1]
+
     elif command == 'unset':
         key = args[1]
         del env.metadatums[key]
+        env.incr.discard(key)
 
-    elif command == 'unset-all': 
+    elif command == 'unset*': 
         all_keys = list(env.metadatums.keys())
         for k in all_keys:
             del env.metadatums[k]
-            
-    elif command == 'set-incr':
+            env.incr.discard(k)
+ 
+    elif command == 'set++':
         key = args[1]
         initial = int(args[2])
         env.metadatums[key] = str(initial)
-        env.incr.append(key)
+        env.incr.add(key)
 
     elif command == 'set-pattern':
         pass
@@ -87,7 +106,12 @@ def process_flac_file(env: CommandEnv, line: str, dry_run: bool):
     line = line.rstrip("\n")
     sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
     for key in env.metadatums.keys():
-        value = env.metadatums[key]
+
+        if key[0] == '_':
+            continue 
+
+        value = render_substitutions(env, env.metadatums[key])
+
         LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
         value_lines = [value[i:i+LINE_LEN] for i in \
                 range(0,len(value), LINE_LEN)]
@@ -131,7 +155,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool):
                 process_flac_file(env, line, dry_run)
 
 
-def create_cwd_batch_list(command_file: str):
+def create_batch_list(command_file: str):
     metadatums = {}
     with open(command_file, mode='w') as f:
         f.write("# mfbatch\n\n")
@@ -195,7 +219,7 @@ def main():
         os.chdir(options.path)
 
     if options.create:
-        create_cwd_batch_list(options.batchfile)
+        create_batch_list(options.batchfile)
 
     if options.edit:
         editor_command = [os.getenv('EDITOR'), options.batchfile]
