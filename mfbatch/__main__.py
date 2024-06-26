@@ -3,15 +3,18 @@
 import sys
 from subprocess import run
 import os
-from glob import iglob
+from glob import glob
 from re import match
 from optparse import OptionParser
 import shlex
 
 from typing import List
 
+
+from mfbatch.util import readline_with_escaped_newlines
+
 from tqdm import tqdm
-import readline
+# import readline
 
 # MFBATCH COMMAND FILE
 # Every line is processed, the first character decides the kind of command 
@@ -40,8 +43,8 @@ import readline
 
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
-COMMAND_PROCHAR = ':'
-COMMENT_PROCHAR = '#'
+COMMAND_LEADER = ':'
+COMMENT_LEADER = '#'
 
 
 class CommandEnv:
@@ -54,7 +57,7 @@ class CommandEnv:
 
 
 def handle_command(metadatums: dict, line: str, dry_run: bool):
-    commandline = line.lstrip(COMMAND_PROCHAR).rstrip("\n")
+    commandline = line.lstrip(COMMAND_LEADER)
     args = shlex.split(commandline)
     command = args[0]
 
@@ -87,31 +90,41 @@ def handle_command(metadatums: dict, line: str, dry_run: bool):
 
 def process_flac_file(metadatums: dict, line: str, dry_run: bool):
     line = line.rstrip("\n")
-    if dry_run:
-        sys.stderr.write(f"Would process file: {line}\n")
-        for key in metadatums.keys():
-            sys.stderr.write(f" > Set {key}: {metadatums[key]}\n")
-    else:
-        pass
+    sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
+    for key in metadatums.keys():
+        value = metadatums[key]
+        value_lines = [value[i:i+60] for i in range(0,len(value),60)]
+        for l in value_lines:
+            if key:
+                sys.stdout.write(f"  {key:.<32} : \033[4m{l}\033[0m\n")
+                key = None
+            else:
+                sys.stdout.write(f"  {' ' * 32}   \033[4m{l}\033[0m\n")
+
+    
+    resp = input('Confirm? [Y/n]: ')
+    if resp in ['','Y','y']:
+        if not dry_run:
+            sys.stdout.write('!! Writing not implemented\n')
+        else:
+            sys.stdout.write('Dry-run, would write file here.\n')
+
 
 
 def execute_batch_list(batch_list_path: str, dry_run: bool):
     with open(batch_list_path, mode='r') as f:
         metadatums = {}
-        while True: 
-            line = f.readline() 
-            if line is None or line == "":
-                break 
-            
-            if line.startswith(COMMENT_PROCHAR):
+        for line in readline_with_escaped_newlines(f):
+
+            if line == '':
+                continue
+
+            elif line.startswith(COMMENT_LEADER):
                 continue 
             
-            elif line.startswith(COMMAND_PROCHAR):
+            elif line.startswith(COMMAND_LEADER):
                 handle_command(metadatums, line, dry_run)
 
-            elif line == "\n":
-                continue
-            
             else:
                 process_flac_file(metadatums, line, dry_run)
 
@@ -121,9 +134,9 @@ def create_cwd_batch_list(command_file: str):
     with open(command_file, mode='w') as f:
         f.write("# mfbatch\n\n")
         metaflac_command = [METAFLAC_PATH, '--list']
-        preflight = len(list(iglob('./**/*.flac', recursive=True)))
-        for path in tqdm(iglob('./**/*.flac', recursive=True), 
-                         total=preflight):
+        flac_files = glob('./**/*.flac', recursive=True)
+        flac_files = sorted(flac_files)
+        for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
             result = run(metaflac_command + [path], capture_output=True)
             this_file_metadata = {}
             for line in result.stdout.decode('utf-8').splitlines():
@@ -155,7 +168,7 @@ def create_cwd_batch_list(command_file: str):
 def main():
     op = OptionParser(usage="%prog [-c] [-W] [options]")
     
-    op.add_option('-c', '--create',           
+    op.add_option('-c', '--create', default=False,       
                   action='store_true',
                   help='Create a new list')
     op.add_option('-W', '--write', default=False, 
@@ -167,6 +180,8 @@ def main():
     op.add_option('-e', '--edit', action='store_true',
                   help="Open batch file in the default editor",
                   default=False)
+    op.add_option('-n', '--dry-run', action='store_true',
+                  help="Dry-run -W.")
     op.add_option('-f', '--batchfile', metavar='FILE',
                   help="Use batch list FILE for reading and writing instead "
                   "of the default \"MFBATCH_LIST\"",
@@ -185,7 +200,7 @@ def main():
         run(editor_command)
 
     if options.write:
-        execute_batch_list(options.batchfile, dry_run=True)
+        execute_batch_list(options.batchfile, dry_run=options.dry_run)
 
 
 if __name__ == "__main__":
