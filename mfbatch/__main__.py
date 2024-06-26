@@ -7,6 +7,7 @@ from glob import glob
 from re import match
 from optparse import OptionParser
 import shlex
+import shutil
 
 from typing import List
 
@@ -36,10 +37,6 @@ from tqdm import tqdm
 #   set-pattern TO FROM PATTERN REPL 
 #       Set key TO to FROM after matching against PATTERN in each subsequent 
 #       file.
-#   rename ARGUMENTS
-#       Subsequent files will be renamed using rename(1). ARGUMENTS will be
-#       passed to the command with the old name at the end.
-
 
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
@@ -56,7 +53,7 @@ class CommandEnv:
         self.incr = []
 
 
-def handle_command(metadatums: dict, line: str, dry_run: bool):
+def handle_command(env: CommandEnv, line: str, dry_run: bool):
     commandline = line.lstrip(COMMAND_LEADER)
     args = shlex.split(commandline)
     command = args[0]
@@ -64,42 +61,45 @@ def handle_command(metadatums: dict, line: str, dry_run: bool):
     if command == 'set':
         key = args[1]
         value = args[2]
-        metadatums[key] = value
+        env.metadatums[key] = value
     
     elif command == 'unset':
         key = args[1]
-        del metadatums[key]
+        del env.metadatums[key]
 
     elif command == 'unset-all': 
-        all_keys = list(metadatums.keys())
+        all_keys = list(env.metadatums.keys())
         for k in all_keys:
-            del metadatums[k]
+            del env.metadatums[k]
             
     elif command == 'set-incr':
-        pass 
+        key = args[1]
+        initial = int(args[2])
+        env.metadatums[key] = str(initial)
+        env.incr.append(key)
 
     elif command == 'set-pattern':
-        pass
-    
-    elif command == 'rename':
         pass
     
     else:
         sys.stderr.write(f"Unrecognized command line: {line}\n")
 
 
-def process_flac_file(metadatums: dict, line: str, dry_run: bool):
+def process_flac_file(env: CommandEnv, line: str, dry_run: bool):
     line = line.rstrip("\n")
     sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
-    for key in metadatums.keys():
-        value = metadatums[key]
-        value_lines = [value[i:i+60] for i in range(0,len(value),60)]
+    for key in env.metadatums.keys():
+        value = env.metadatums[key]
+        LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
+        value_lines = [value[i:i+LINE_LEN] for i in \
+                range(0,len(value), LINE_LEN)]
+        
         for l in value_lines:
             if key:
-                sys.stdout.write(f"  {key:.<32} : \033[4m{l}\033[0m\n")
+                sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
                 key = None
             else:
-                sys.stdout.write(f"  {' ' * 32}   \033[4m{l}\033[0m\n")
+                sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
 
     
     resp = input('Confirm? [Y/n]: ')
@@ -109,11 +109,15 @@ def process_flac_file(metadatums: dict, line: str, dry_run: bool):
         else:
             sys.stdout.write('Dry-run, would write file here.\n')
 
+    for i in env.incr:
+        ival = int(env.metadatums[i]) + 1
+        env.metadatums[i] = str(ival)
+
 
 
 def execute_batch_list(batch_list_path: str, dry_run: bool):
     with open(batch_list_path, mode='r') as f:
-        metadatums = {}
+        env = CommandEnv()
         for line in readline_with_escaped_newlines(f):
 
             if line == '':
@@ -123,10 +127,10 @@ def execute_batch_list(batch_list_path: str, dry_run: bool):
                 continue 
             
             elif line.startswith(COMMAND_LEADER):
-                handle_command(metadatums, line, dry_run)
+                handle_command(env, line, dry_run)
 
             else:
-                process_flac_file(metadatums, line, dry_run)
+                process_flac_file(env, line, dry_run)
 
 
 def create_cwd_batch_list(command_file: str):
