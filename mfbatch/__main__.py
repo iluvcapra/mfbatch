@@ -34,9 +34,7 @@ from tqdm import tqdm
 #   set-incr KEY INITIAL
 #       KEY in next file will be set to INITIAL which will be incremented by 
 #       one for each file processed.
-#   set-pattern TO FROM PATTERN REPL 
-#       Set key TO to FROM after matching against PATTERN in each subsequent 
-#       file.
+
 
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
