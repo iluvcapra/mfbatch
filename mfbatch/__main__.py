@@ -8,6 +8,7 @@ from re import match
 from optparse import OptionParser
 import shlex
 import shutil
+from string import Template 
 
 from typing import Set 
 
@@ -32,7 +33,7 @@ from tqdm import tqdm
 #       An alias for :set DESCRIPTION
 #   unset KEY 
 #       KEY in each subsequent file will be unset.
-#   unset-all 
+#   unset * 
 #       No keys in each subsequent file will be set.
 #   set+ KEY INITIAL
 #       KEY in next file will be set to INITIAL which will be incremented by 
@@ -57,12 +58,8 @@ class CommandEnv:
 
 
 def render_substitutions(env: CommandEnv, in_str: str) -> str: 
-    # for key in env.metadatums.keys():
-    #     val = env.metadatums[key]
-    #     needle = "$" + key 
-    #     in_str = in_str.replace(needle,val)
-    #
-    return in_str
+    template = Template(in_str)
+    return template.substitute(env.metadatums)
 
 
 def handle_command(env: CommandEnv, line: str, dry_run: bool):
@@ -73,21 +70,21 @@ def handle_command(env: CommandEnv, line: str, dry_run: bool):
     if command == 'set':
         key = args[1]
         value = args[2]
-        env.metadatums[key] = value
+        env.metadatums[key] = render_substitutions(env, value)
     
     elif command == 'd':
-        env.metadatums['DESCRIPTION'] = args[1]
+        env.metadatums['DESCRIPTION'] = render_substitutions(env, args[1])
 
     elif command == 'unset':
         key = args[1]
-        del env.metadatums[key]
-        env.incr.discard(key)
-
-    elif command == 'unset*': 
-        all_keys = list(env.metadatums.keys())
-        for k in all_keys:
-            del env.metadatums[k]
-            env.incr.discard(k)
+        if key == '*':
+            all_keys = list(env.metadatums.keys())
+            for k in all_keys:
+                del env.metadatums[k]
+                env.incr.discard(k)
+        else:
+            del env.metadatums[key]
+            env.incr.discard(key)
  
     elif command == 'set++':
         key = args[1]
