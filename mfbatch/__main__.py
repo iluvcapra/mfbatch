@@ -12,49 +12,17 @@ from string import Template
 
 from typing import Set 
 
-
 from mfbatch.util import readline_with_escaped_newlines
+from mfbathc.commands import BatchfileParser, CommandEnv
 
 from tqdm import tqdm
 # import readline
 
 # MFBATCH COMMAND FILE
-# Every line is processed, the first character decides the kind of command 
-# in the style of mtree.
-# [a-z] Line is a command 
-# : Line is a file 
-# # is a comment
-
-# Commands are: 
-#   set KEY VAL +
-#       KEY in each subsequent file is set to VAL. $-keys in VAL will be 
-#       substituted.
-#   d VAL +
-#       An alias for :set DESCRIPTION
-#   unset KEY 
-#       KEY in each subsequent file will be unset.
-#   unset * 
-#       No keys in each subsequent file will be set.
-#   set+ KEY INITIAL
-#       KEY in next file will be set to INITIAL which will be incremented by 
-#       one for each file processed.
-
-# Commands to be implemented are:
-#   set1 KEY VAL 
-#       KEY in the next file (and only the next file) is set to VAL.
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
 COMMAND_LEADER = ':'
 COMMENT_LEADER = '#'
-
-
-class CommandEnv:
-    metadatums: dict
-    incr: Set[str]
-
-    def __init__(self) -> None:
-        self.metadatums = dict()
-        self.incr = set()
 
 
 def render_substitutions(env: CommandEnv, in_str: str) -> str: 
