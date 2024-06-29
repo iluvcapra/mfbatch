@@ -7,13 +7,10 @@ from glob import glob
 from re import match
 from optparse import OptionParser
 import shlex
-import shutil
-from string import Template 
 
-from typing import Set 
 
 from mfbatch.util import readline_with_escaped_newlines
-from mfbathc.commands import BatchfileParser, CommandEnv
+from mfbatch.commands import BatchfileParser 
 
 from tqdm import tqdm
 # import readline
@@ -21,103 +18,15 @@ from tqdm import tqdm
 # MFBATCH COMMAND FILE
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
-COMMAND_LEADER = ':'
-COMMENT_LEADER = '#'
-
-
-def render_substitutions(env: CommandEnv, in_str: str) -> str: 
-    template = Template(in_str)
-    return template.substitute(env.metadatums)
-
-
-def handle_command(env: CommandEnv, line: str, dry_run: bool):
-    commandline = line.lstrip(COMMAND_LEADER)
-    args = shlex.split(commandline)
-    command = args[0]
-
-    if command == 'set':
-        key = args[1]
-        value = args[2]
-        env.metadatums[key] = render_substitutions(env, value)
-    
-    elif command == 'd':
-        env.metadatums['DESCRIPTION'] = render_substitutions(env, args[1])
-
-    elif command == 'unset':
-        key = args[1]
-        if key == '*':
-            all_keys = list(env.metadatums.keys())
-            for k in all_keys:
-                del env.metadatums[k]
-                env.incr.discard(k)
-        else:
-            del env.metadatums[key]
-            env.incr.discard(key)
- 
-    elif command == 'set++':
-        key = args[1]
-        initial = int(args[2])
-        env.metadatums[key] = str(initial)
-        env.incr.add(key)
-
-    elif command == 'set-pattern':
-        pass
-    
-    else:
-        sys.stderr.write(f"Unrecognized command line: {line}\n")
-
-
-def process_flac_file(env: CommandEnv, line: str, dry_run: bool):
-    line = line.rstrip("\n")
-    sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
-    for key in env.metadatums.keys():
-
-        if key[0] == '_':
-            continue 
-
-        value = render_substitutions(env, env.metadatums[key])
-
-        LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
-        value_lines = [value[i:i+LINE_LEN] for i in \
-                range(0,len(value), LINE_LEN)]
-        
-        for l in value_lines:
-            if key:
-                sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
-                key = None
-            else:
-                sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
-
-    
-    resp = input('Confirm? [Y/n]: ')
-    if resp in ['','Y','y']:
-        if not dry_run:
-            sys.stdout.write('!! Writing not implemented\n')
-        else:
-            sys.stdout.write('Dry-run, would write file here.\n')
-
-    for i in env.incr:
-        ival = int(env.metadatums[i]) + 1
-        env.metadatums[i] = str(ival)
-
-
 
 def execute_batch_list(batch_list_path: str, dry_run: bool):
     with open(batch_list_path, mode='r') as f:
-        env = CommandEnv()
-        for line in readline_with_escaped_newlines(f):
+        parser = BatchfileParser()
+        parser.dry_run = dry_run
 
-            if line == '':
-                continue
-
-            elif line.startswith(COMMENT_LEADER):
-                continue 
-            
-            elif line.startswith(COMMAND_LEADER):
-                handle_command(env, line, dry_run)
-
-            else:
-                process_flac_file(env, line, dry_run)
+        for line, line_no in readline_with_escaped_newlines(f):
+            if len(line) > 0:
+                parser._handle_line(line, line_no)
 
 
 def create_batch_list(command_file: str):

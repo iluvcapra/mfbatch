@@ -2,8 +2,10 @@
 
 def readline_with_escaped_newlines(f):
     line = ''
+    line_no = 0
     while True:
         line += f.readline()
+        line_no += 1
         
         if len(line) == 0:
             break 
@@ -15,6 +17,6 @@ def readline_with_escaped_newlines(f):
             continue
 
         else:
-            yield line 
+            yield line, line_no 
             line = ''
 
