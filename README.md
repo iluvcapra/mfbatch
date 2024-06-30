@@ -15,8 +15,7 @@ $ cd path/to/my/flacs
 $ mfbatch -c 
 ```
 
-### 2) Edit the `MFBATCH_LIST` file in vim, or nano, or whatever your favorite text
-editor is.
+### 2) Edit the `MFBATCH_LIST` file in you `$EDITOR`
 
 ```sh 
 $ mfbatch --edit
