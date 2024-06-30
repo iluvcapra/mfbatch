@@ -8,14 +8,14 @@ line and is designed to be used with your favorite text editor.
 
 ## Workflow
 
-1) Create a new `MFBATCH_LIST` file for a directory of FLAC files.
+### 1) Create a new `MFBATCH_LIST` file for a directory of FLAC files.
 
 ```sh 
 $ cd path/to/my/flacs 
 $ mfbatch -c 
 ```
 
-2) Edit the `MFBATCH_LIST` file in vim, or nano, or whatever your favorite text
+### 2) Edit the `MFBATCH_LIST` file in vim, or nano, or whatever your favorite text
 editor is.
 
 ```sh 
@@ -38,7 +38,10 @@ in the selected folder along with their current metadata.
 ./tone3.flac
 ```
 
-3) After you've made the changes you want to make, write them to the files.
+The `MFBATCH_LIST` format allows you to set metadata once and then write values
+to a run of files all at once.
+
+### 3) After you've made the changes you want to make, write them to the files.
 
 ```sh 
 $ mfbatch -W
