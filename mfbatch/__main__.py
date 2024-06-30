@@ -1,23 +1,20 @@
 # __main__.py 
 
-import sys
-from subprocess import run
 import os
 from glob import glob
-from re import match
+from subprocess import run
+
 from optparse import OptionParser
 import shlex
 
 
 from mfbatch.util import readline_with_escaped_newlines
+import mfbatch.metaflac as flac
 from mfbatch.commands import BatchfileParser 
+
 
 from tqdm import tqdm
 # import readline
-
-# MFBATCH COMMAND FILE
-
-METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
 
 def execute_batch_list(batch_list_path: str, dry_run: bool):
     with open(batch_list_path, mode='r') as f:
@@ -30,20 +27,14 @@ def execute_batch_list(batch_list_path: str, dry_run: bool):
 
 
 def create_batch_list(command_file: str):
-    metadatums = {}
+
     with open(command_file, mode='w') as f:
         f.write("# mfbatch\n\n")
-        metaflac_command = [METAFLAC_PATH, '--list']
+        metadatums = {}
         flac_files = glob('./**/*.flac', recursive=True)
         flac_files = sorted(flac_files)
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            result = run(metaflac_command + [path], capture_output=True)
-            this_file_metadata = {}
-            for line in result.stdout.decode('utf-8').splitlines():
-                m = match(r'^\s+comment\[\d\]: ([A-Za-z]+)=(.*)$', line)
-                if m is not None:
-                    this_file_metadata[m[1]] = m[2]
-
+            this_file_metadata = flac.read_metadata(path) 
             for this_key in this_file_metadata.keys():
                 if this_key not in metadatums:
                     f.write(f":set {this_key} "
