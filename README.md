@@ -15,6 +15,10 @@ $ cd path/to/my/flacs
 $ mfbatch -c 
 ```
 
+`mfbatch` will scan the current working directory and 
+all subdirectories recursively. You can use a `-p` option 
+to switch to another directory before scanning.
+
 ### 2) Edit the `MFBATCH_LIST` file in your `$EDITOR`.
 ```sh 
 $ mfbatch --edit
@@ -40,7 +44,8 @@ in the selected folder along with their current metadata.
 ```
 
 The `MFBATCH_LIST` format allows you to set metadata once and then write values
-to a run of files all at once.
+to a run of files all at once. Several commands are available to manipulate
+the metadata written to the files.
 
 ### 3) After you've made the changes you want to make, write them to the files.
 
