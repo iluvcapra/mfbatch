@@ -33,11 +33,13 @@ class CommandEnv:
     metadatums: Dict[str, str]
     incr: Dict[str, str]
     patterns: Dict[str, Tuple[str, str, str]]
+    oncse: Dict[str, str]
 
     def __init__(self) -> None:
         self.metadatums = dict()
         self.incr = dict()
         self.patterns = dict()
+        self.onces = dict()
 
     def unset_key(self, k):
         del self.metadatums[k]
@@ -53,6 +55,21 @@ class CommandEnv:
             from_key, pattern, replacement = self.patterns[to_key]
             from_value = self.metadatums[from_key]
             self.metadatums[to_key] = re.sub(pattern, replacement, from_value)
+
+    def set_once(self, key, value):
+        self.onces[key] = self.metadatums.get(key, None)
+        self.metadatums[key] = value
+
+    def revert_onces(self):
+        keys = list(self.onces)
+        for key in keys:
+            if self.onces[key] == None:
+                del self.metadatums[key]
+            else:
+                self.metadatums[key] = self.onces[key]
+
+            del self.onces[key]
+
 
     def increment_all(self):
         for k in self.incr.keys():
@@ -147,6 +164,7 @@ they appear in the batchfile.
                             sys.stdout.write("Complete!")
 
                         self.env.increment_all()
+                        self.env.revert_onces()
 
                     elif val.startswith(self.COMMAND_LEADER):
                         self._handle_command(val.lstrip(self.COMMAND_LEADER), 
@@ -171,6 +189,16 @@ they appear in the batchfile.
         value = args[1]
         self.env.metadatums[key] = value 
 
+    def set1(self, args):
+        """
+        set1 KEY VALUE 
+        KEY is set to VALUE for the next file only. After the next file is 
+        written the value of KEY reverts to its previous value
+        """
+        key = args[0]
+        value = args[1]
+        self.env.set_once(key, value)
+
     def unset(self, args):
         """
         unset KEY 
@@ -190,9 +218,9 @@ they appear in the batchfile.
         for k in all_keys:
             self.env.unset_key(k)
 
-    def seti(self, args):
+    def setinc(self, args):
         """
-        seti KEY INITIAL [FORMAT]
+        setinc KEY INITIAL [FORMAT]
         KEY in the next file appearing in the batchfile will be set to INITIAL,
         which must be an integer. INITIAL will then be incremented by one and
         this process will be repeated for each subsequent file in the
@@ -206,7 +234,7 @@ they appear in the batchfile.
         if len(args) > 2:
             fmt = args[2]
 
-        self.env.metadatums[key] = initial
+        self.env.metadatums[key] = fmt % (int(initial))
         self.env.incr[key] = fmt
 
     def setp(self, args):
