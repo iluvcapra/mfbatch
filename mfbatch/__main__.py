@@ -6,11 +6,12 @@ from subprocess import run
 
 from optparse import OptionParser
 import shlex
-
+from typing import Callable
+import inspect
 
 from mfbatch.util import readline_with_escaped_newlines
 import mfbatch.metaflac as flac
-from mfbatch.commands import BatchfileParser 
+from mfbatch.commands import BatchfileParser, CommandEnv 
 
 
 from tqdm import tqdm
@@ -57,7 +58,7 @@ def create_batch_list(command_file: str):
 
 
 def main():
-    op = OptionParser(usage="%prog [-c] [-W] [options]")
+    op = OptionParser(usage="%prog [-c] [-e] [-W] [options]")
     
     op.add_option('-c', '--create', default=False,       
                   action='store_true',
@@ -77,8 +78,24 @@ def main():
                   help="Use batch list FILE for reading and writing instead "
                   "of the default \"MFBATCH_LIST\"",
                   default='MFBATCH_LIST')
+    op.add_option('--help-commands', action='store_true', default=False,
+                  dest='help_commands',
+                  help='Print a list of available commands for batch lists '                  
+                  'and interactive writing.') 
 
     options, _ = op.parse_args()
+
+    if options.help_commands:
+        print("Command Help\n------------")
+        commands = [command for command in dir(BatchfileParser) if 
+                    not command.startswith('_')]
+        print(f"{inspect.cleandoc(BatchfileParser.__doc__ or '')}\n\n")
+        for command in commands:
+            meth = getattr(BatchfileParser, command)
+            if isinstance(meth, Callable):
+                print(f"{inspect.cleandoc(meth.__doc__ or '')}\n")
+            
+        exit(0)
 
     if options.path is not None:
         os.chdir(options.path)
