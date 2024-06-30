@@ -48,7 +48,6 @@ class CommandEnv:
     def set_pattern(self, to: str, frm: str, pattern: str, repl: str):
         self.patterns[to] = (frm, pattern, repl)
 
-
     def evaluate_patterns(self):
         for to_key in self.patterns.keys():
             from_key, pattern, replacement = self.patterns[to_key]
@@ -61,8 +60,6 @@ class CommandEnv:
             self.metadatums[k] = self.incr[k] % (v + 1)
             
     
-
-
 class BatchfileParser:
     """
 A batchfile is a text file of lines. Lines either begin with a '#' to denote a
