@@ -26,16 +26,19 @@ The `MFBATCH_LIST` file will contain a transcript of all of the flac files
 in the selected folder along with their current metadata.
 
 ```sh 
-
 :set ALBUM 'Test Album 1'
+:set ARTIST 'Test Artist'
 :set DESCRIPTION 'Tone file #1, test tone 440Hz'
+:setp TITLE DESCRIPTION "^Tone file #(\d+).*" 'Tone \1'
 ./tone1.flac
 
 :set DESCRIPTION 'Tone file #2, also 440Hz'
 ./tone2.flac
 :unset DESCRIPTION
 
+:set DESCRIPTION 'Tone file #3'
 ./tone3.flac
+
 ```
 
 The `MFBATCH_LIST` format allows you to set metadata once and then write values
