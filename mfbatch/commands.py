@@ -6,10 +6,11 @@ import sys
 import shlex
 import shutil
 import re
+import os.path
 
 import mfbatch.metaflac as flac
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 
 class UnrecognizedCommandError(Exception):
@@ -33,7 +34,7 @@ class CommandEnv:
     metadatums: Dict[str, str]
     incr: Dict[str, str]
     patterns: Dict[str, Tuple[str, str, str]]
-    oncse: Dict[str, str]
+    onces: Dict[str, Optional[str]]
 
     def __init__(self) -> None:
         self.metadatums = dict()
@@ -60,16 +61,25 @@ class CommandEnv:
         self.onces[key] = self.metadatums.get(key, None)
         self.metadatums[key] = value
 
+    def set_file_keys(self, path):
+        apath = os.path.abspath(path)
+        self.metadatums['_ABSPATH'] = apath
+        dirname, self.metadatums['_FILENAME'] = os.path.split(apath)
+        _, self.metadatums['_FOLDER'] = os.path.split(dirname)
+
+    def clear_file_keys(self):
+        del self.metadatums['_ABSPATH']
+        del self.metadatums['_FILENAME']
+        del self.metadatums['_FOLDER']
+
     def revert_onces(self):
         keys = list(self.onces)
         for key in keys:
-            if self.onces[key] == None:
-                del self.metadatums[key]
-            else:
-                self.metadatums[key] = self.onces[key]
+            del self.metadatums[key]
+            if self.onces[key] != None:
+                self.metadatums[key] = self.onces[key] or '' 
 
             del self.onces[key]
-
 
     def increment_all(self):
         for k in self.incr.keys():
@@ -128,6 +138,8 @@ they appear in the batchfile.
 
     def _handle_file(self, line, interactive): 
         while True:
+
+            self.env.set_file_keys(line)
             self.env.evaluate_patterns()
 
             if self.dry_run:
@@ -165,6 +177,7 @@ they appear in the batchfile.
 
                         self.env.increment_all()
                         self.env.revert_onces()
+                        self.env.clear_file_keys()
 
                     elif val.startswith(self.COMMAND_LEADER):
                         self._handle_command(val.lstrip(self.COMMAND_LEADER), 
