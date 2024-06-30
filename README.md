@@ -3,7 +3,7 @@
 I've been reorganzing my sound effects library recently and have had to edit a 
 large number of FLAC files, adding and editing descriptions, normalizing 
 fields etc. and this is one of the tools I've come up with for updating a large
-number of FLAC files in an easy qay quickly. It works completely in the command
+number of FLAC files in an easy way quickly. It works completely in the command
 line and is designed to be used with your favorite text editor.
 
 ## Workflow
