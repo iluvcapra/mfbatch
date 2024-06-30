@@ -58,7 +58,7 @@ def create_batch_list(command_file: str):
 
 
 def main():
-    op = OptionParser(usage="%prog [-c] [-e] [-W] [options]")
+    op = OptionParser(usage="%prog (-c | -e | -W) [options]")
     
     op.add_option('-c', '--create', default=False,       
                   action='store_true',
@@ -97,18 +97,26 @@ def main():
             
         exit(0)
 
+    mode_given = False 
     if options.path is not None:
         os.chdir(options.path)
 
     if options.create:
+        mode_given = True
         create_batch_list(options.batchfile)
 
     if options.edit:
+        mode_given = True
         editor_command = [os.getenv('EDITOR'), options.batchfile]
         run(editor_command)
 
     if options.write:
+        mode_given = True
         execute_batch_list(options.batchfile, dry_run=options.dry_run)
+
+    if mode_given == False:
+        op.print_usage()
+        exit(-1)
 
 
 if __name__ == "__main__":
