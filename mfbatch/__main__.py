@@ -62,25 +62,26 @@ def main():
     
     op.add_option('-c', '--create', default=False,       
                   action='store_true',
-                  help='Create a new list')
+                  help='create a new list')
+    op.add_option('-e', '--edit', action='store_true',
+                  help="open batch file in the default editor",
+                  default=False)
     op.add_option('-W', '--write', default=False, 
                   action='store_true',
-                  help="Execute batch list, write to files")
+                  help="execute batch list, write to files")
+
     op.add_option('-p', '--path', metavar='DIR',
                   help='chdir to DIR before running',
                   default=None) 
-    op.add_option('-e', '--edit', action='store_true',
-                  help="Open batch file in the default editor",
-                  default=False)
     op.add_option('-n', '--dry-run', action='store_true',
-                  help="Dry-run -W.")
+                  help="dry-run -W.")
     op.add_option('-f', '--batchfile', metavar='FILE',
-                  help="Use batch list FILE for reading and writing instead "
+                  help="use batch list FILE for reading and writing instead "
                   "of the default \"MFBATCH_LIST\"",
                   default='MFBATCH_LIST')
     op.add_option('--help-commands', action='store_true', default=False,
                   dest='help_commands',
-                  help='Print a list of available commands for batch lists '                  
+                  help='print a list of available commands for batch lists '                  
                   'and interactive writing.') 
 
     options, _ = op.parse_args()
