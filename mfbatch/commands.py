@@ -255,7 +255,8 @@ they appear in the batchfile.
         setp KEY INPUT PATTERN REPL
         KEY will be set to the result of re.sub(PATTERN, REPL, INPUT). Patterns
         are evaluated in the order they appear in the batchfile, once for each 
-        file that appears in the batchfile before writing.
+        file that appears in the batchfile before writing. INPUT can use the
+        special keys _FILENAME, _ABSPATH, and _FOLDER.
         """
         key = args[0]
         inp = args[1]
