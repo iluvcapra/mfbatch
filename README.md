@@ -52,3 +52,7 @@ the metadata written to the files.
 ```sh 
 $ mfbatch -W
 ```
+
+Writing metadata is interactive, `mfbatch` will display the
+metdata to be written to each file and metadata can be
+edited interactively at a prompt before writing.
