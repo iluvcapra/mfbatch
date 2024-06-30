@@ -35,6 +35,9 @@ class CommandEnv:
     incr: Dict[str, str]
     patterns: Dict[str, Tuple[str, str, str]]
     onces: Dict[str, Optional[str]]
+    
+    artwork_file: Optional[str]
+    artwork_desc: Optional[str]
 
     def __init__(self) -> None:
         self.metadatums = dict()
@@ -164,7 +167,7 @@ they appear in the batchfile.
                         key = None
                     else:
                         sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
-            
+
             if interactive:
                     val = input('Write? [Y/n/a/:] > ')
                     if val == '' or val.startswith('Y') or val.startswith('y'):
@@ -255,8 +258,8 @@ they appear in the batchfile.
         setp KEY INPUT PATTERN REPL
         KEY will be set to the result of re.sub(PATTERN, REPL, INPUT). Patterns
         are evaluated in the order they appear in the batchfile, once for each 
-        file that appears in the batchfile before writing. INPUT can use the
-        special keys _FILENAME, _ABSPATH, and _FOLDER.
+        file that appears in the batchfile before writing. INPUT can be KEY or 
+        use the special keys _FILENAME, _ABSPATH, and _FOLDER.
         """
         key = args[0]
         inp = args[1]
@@ -264,6 +267,14 @@ they appear in the batchfile.
         repl = args[3]
         self.env.set_pattern(key,inp,pattern, repl)
         
+    def d(self, args):
+        """
+        d VALUE
+        An alias for "set1 DESCRIPTION VALUE".
+        """
+        val = args[0]
+        self.env.set_once('DESCRIPTION', val)
+
     
     
 
