@@ -113,7 +113,7 @@ def main():
         mode_given = True
         editor_command = [os.getenv('EDITOR'), options.batchfile]
         run(editor_command)
-
+    
     if options.write:
         mode_given = True
         execute_batch_list(options.batchfile, 
