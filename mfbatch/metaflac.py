@@ -61,6 +61,9 @@ def write_metadata(path: str, data: FlacMetadata,
     for k in data.keys():
         key = sanatize_key(k)
         val = sanatize_value(data[k])
+        if key.startswith('_'):
+            continue
+
         metadatum_f  = metadatum_f + f"{key}={val}\n"
 
     insert_job = run([metaflac_path, "--import-tags-from=-", path], 

@@ -115,7 +115,7 @@ they appear in the batchfile.
         self.dry_run = True 
         self.env = CommandEnv()
 
-    def _handle_line(self, line:str, lineno: int, interactive: bool = True):
+    def _handle_line(self, line:str, lineno: int, interactive: bool):
         if line.startswith(self.COMMAND_LEADER):
             self._handle_command(line.lstrip(self.COMMAND_LEADER), lineno)
         elif line.startswith(self.COMMENT_LEADER):

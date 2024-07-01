@@ -11,20 +11,20 @@ import inspect
 
 from mfbatch.util import readline_with_escaped_newlines
 import mfbatch.metaflac as flac
-from mfbatch.commands import BatchfileParser, CommandEnv 
+from mfbatch.commands import BatchfileParser 
 
 
 from tqdm import tqdm
 # import readline
 
-def execute_batch_list(batch_list_path: str, dry_run: bool):
+def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
     with open(batch_list_path, mode='r') as f:
         parser = BatchfileParser()
         parser.dry_run = dry_run
 
         for line, line_no in readline_with_escaped_newlines(f):
             if len(line) > 0:
-                parser._handle_line(line, line_no)
+                parser._handle_line(line, line_no, interactive)
 
 
 def create_batch_list(command_file: str):
@@ -69,7 +69,7 @@ def main():
     op.add_option('-W', '--write', default=False, 
                   action='store_true',
                   help="execute batch list, write to files")
-
+    
     op.add_option('-p', '--path', metavar='DIR',
                   help='chdir to DIR before running',
                   default=None) 
@@ -79,6 +79,9 @@ def main():
                   help="use batch list FILE for reading and writing instead "
                   "of the default \"MFBATCH_LIST\"",
                   default='MFBATCH_LIST')
+    op.add_option('-y', '--yes', default=False, action='store_true',
+                  dest='yes', help="automatically confirm all prompts, "
+                  "inhibits interactive editing in -W mode")
     op.add_option('--help-commands', action='store_true', default=False,
                   dest='help_commands',
                   help='print a list of available commands for batch lists '                  
@@ -113,7 +116,9 @@ def main():
 
     if options.write:
         mode_given = True
-        execute_batch_list(options.batchfile, dry_run=options.dry_run)
+        execute_batch_list(options.batchfile, 
+                           dry_run=options.dry_run, 
+                           interactive=not options.yes)
 
     if mode_given == False:
         op.print_usage()
