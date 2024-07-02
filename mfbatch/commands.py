@@ -177,6 +177,20 @@ they appear in the batchfile.
         pass
 
     def _handle_file(self, line, interactive):
+
+        def write_metadata_impl():
+            if self.dry_run:
+                print("DRY RUN would write metadata here.")
+            else:
+                sys.stdout.write("Writing metadata... ")
+                flac.write_metadata(line, self.env.metadatums)
+                sys.stdout.write("Complete!")
+
+            self.env.increment_all()
+            self.env.revert_onces()
+            self.env.clear_file_keys()
+
+
         while True:
 
             self.env.set_file_keys(line)
@@ -208,36 +222,17 @@ they appear in the batchfile.
             if interactive:
                 val = input('Write? [Y/n/a/:] > ')
                 if val == '' or val.startswith('Y') or val.startswith('y'):
-                    if self.dry_run:
-                        print("DRY RUN would write metadata here.")
-                    else:
-                        sys.stdout.write("Writing metadata... ")
-                        flac.write_metadata(line, self.env.metadatums)
-                        sys.stdout.write("Complete!")
-
-                    self.env.increment_all()
-                    self.env.revert_onces()
-                    self.env.clear_file_keys()
-
+                    write_metadata_impl() 
+                    break
                 elif val.startswith(self.COMMAND_LEADER):
                     self._handle_command(val.lstrip(self.COMMAND_LEADER),
                                          lineno=-1)
                     continue
                 elif val == 'a':
                     print("Aborting write session...", file=sys.stdout)
-
-                break
-
-            if self.dry_run:
-                print("DRY RUN would write metadata here.")
-            else:
-                sys.stdout.write("Writing metadata... ")
-                flac.write_metadata(line, self.env.metadatums)
-                sys.stdout.write("Complete!")
-
-            self.env.increment_all()
-            self.env.revert_onces()
-            self.env.clear_file_keys()
+                    break
+            
+            write_metadata_impl()
 
     def set(self, args):
         """
