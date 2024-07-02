@@ -55,7 +55,7 @@ def create_batch_list(command_file: str, recursive=True):
 
             keys = list(metadatums.keys())
             for key in keys:
-                if key not in this_file_metadata.keys():
+                if key not in this_file_metadata:
                     f.write(f":unset {key}\n")
                     del metadatums[key]
 

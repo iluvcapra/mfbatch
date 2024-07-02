@@ -9,9 +9,9 @@ import shutil
 import re
 import os.path
 
-import mfbatch.metaflac as flac
-
 from typing import Dict, Tuple, Optional
+
+import mfbatch.metaflac as flac
 
 
 class UnrecognizedCommandError(Exception):
@@ -75,8 +75,7 @@ class CommandEnv:
         Evaluate all patterns, this must run once and exactly once before 
         writing file metadata.
         """
-        for to_key in self.patterns.keys():
-            from_key, pattern, replacement = self.patterns[to_key]
+        for to_key, (from_key, pattern, replacement) in self.patterns.items():
             from_value = self.metadatums[from_key]
             self.metadatums[to_key] = re.sub(pattern, replacement, from_value)
 
@@ -111,7 +110,7 @@ class CommandEnv:
         keys = list(self.onces)
         for key in keys:
             del self.metadatums[key]
-            if self.onces[key] != None:
+            if self.onces[key] is not None:
                 self.metadatums[key] = self.onces[key] or ''
 
             del self.onces[key]
@@ -120,8 +119,8 @@ class CommandEnv:
         """
         Increment all increment keys.
         """
-        for k in self.incr.keys():
-            v = int(self.metadatums[k])
+        for k, v in self.incr.items():
+            v = int(v)
             self.metadatums[k] = self.incr[k] % (v + 1)
 
 
@@ -167,7 +166,7 @@ they appear in the batchfile.
 
         if args[0] in actions:
             try:
-                self.__getattribute__(args[0])(args[1:])
+                getattr(self, args[0])(args[1:])
             except KeyError as exc:
                 raise CommandArgumentError(command=args[0],
                                            line=lineno) from exc
@@ -177,20 +176,19 @@ they appear in the batchfile.
     def _handle_comment(self, _):
         pass
 
+    def _write_metadata_impl(self, line):
+        if self.dry_run:
+            print("DRY RUN would write metadata here.")
+        else:
+            sys.stdout.write("Writing metadata... ")
+            flac.write_metadata(line, self.env.metadatums)
+            sys.stdout.write("Complete!")
+
+        self.env.increment_all()
+        self.env.revert_onces()
+        self.env.clear_file_keys()
+
     def _handle_file(self, line, interactive):
-
-        def write_metadata_impl():
-            if self.dry_run:
-                print("DRY RUN would write metadata here.")
-            else:
-                sys.stdout.write("Writing metadata... ")
-                flac.write_metadata(line, self.env.metadatums)
-                sys.stdout.write("Complete!")
-
-            self.env.increment_all()
-            self.env.revert_onces()
-            self.env.clear_file_keys()
-
         while True:
 
             self.env.set_file_keys(line)
@@ -206,9 +204,9 @@ they appear in the batchfile.
                 if key.startswith('_'):
                     continue
 
-                LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
-                value_lines = [value[i:i+LINE_LEN] for i in
-                               range(0, len(value), LINE_LEN)]
+                line_len = int(shutil.get_terminal_size()[0]) - 32
+                value_lines = [value[i:i+line_len] for i in
+                               range(0, len(value), line_len)]
 
                 for l in value_lines:
                     if key:
@@ -219,18 +217,18 @@ they appear in the batchfile.
 
             if interactive:
                 val = input('Write? [Y/n/a/:] > ')
-                if val == '' or val.startswith('Y') or val.startswith('y'):
-                    write_metadata_impl()
+                if val == '' or val[0].upper() == 'Y':
+                    self._write_metadata_impl(line)
                     break
-                elif val.startswith(self.COMMAND_LEADER):
+                if val.startswith(self.COMMAND_LEADER):
                     self._handle_command(val.lstrip(self.COMMAND_LEADER),
                                          lineno=-1)
-                    continue
                 elif val == 'a':
                     print("Aborting write session...", file=sys.stdout)
                     break
-
-            write_metadata_impl()
+            else:
+                self._write_metadata_impl(line)
+                break
 
     def set(self, args):
         """
