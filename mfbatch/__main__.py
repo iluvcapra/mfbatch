@@ -30,15 +30,15 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser._handle_line(line, line_no, interactive)
 
 
-def create_batch_list(command_file: str):
+def create_batch_list(command_file: str, recursive= True):
     """
-    Read all FLAC files in the cwd recursively and create a batchfile that 
-    re-creates all of their metadata.
+    Read all FLAC files in the cwd and create a batchfile that re-creates all
+    of their metadata.
     """
     with open(command_file, mode='w', encoding='utf-8') as f:
         f.write("# mfbatch\n\n")
         metadatums = {}
-        flac_files = glob('./**/*.flac', recursive=True)
+        flac_files = glob('./**/*.flac', recursive=recursive)
         flac_files = sorted(flac_files)
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
             this_file_metadata = flac.read_metadata(path)
