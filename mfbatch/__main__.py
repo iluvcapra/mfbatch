@@ -128,7 +128,7 @@ def main():
                            dry_run=options.dry_run,
                            interactive=not options.yes)
 
-    if mode_given == False:
+    if not mode_given:
         op.print_usage()
         sys.exit(-1)
 
