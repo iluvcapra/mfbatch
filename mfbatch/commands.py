@@ -1,3 +1,6 @@
+"""
+mfbatch commands and batchfile parser
+"""
 # commands.py
 # mfbatch
 
@@ -14,6 +17,7 @@ from typing import Dict, Tuple, Optional
 
 
 class UnrecognizedCommandError(Exception):
+    "A command in the batchfile was not recognized"
     command: str
     line: int
 
@@ -23,6 +27,10 @@ class UnrecognizedCommandError(Exception):
 
 
 class CommandArgumentError(Exception):
+    """
+    A command line in the batchfile did not have the correct number of argumets
+    """
+
     command: str
     line: int
 
@@ -32,6 +40,9 @@ class CommandArgumentError(Exception):
 
 
 class CommandEnv:
+    """
+    Stores values and state for commands
+    """
     metadatums: Dict[str, str]
     incr: Dict[str, str]
     patterns: Dict[str, Tuple[str, str, str]]
@@ -41,21 +52,31 @@ class CommandEnv:
     artwork_desc: Optional[str]
 
     def __init__(self) -> None:
-        self.metadatums = dict()
-        self.incr = dict()
-        self.patterns = dict()
-        self.onces = dict()
+        self.metadatums = {} 
+        self.incr = {}
+        self.patterns = {}
+        self.onces = {}
 
     def unset_key(self, k):
+        """
+        Delete a key from the environment
+        """
         del self.metadatums[k]
 
         self.incr.pop(k, None)
         self.patterns.pop(k, None)
 
     def set_pattern(self, to: str, frm: str, pattern: str, repl: str):
+        """
+        Establish a pattern replacement in the environment
+        """
         self.patterns[to] = (frm, pattern, repl)
 
     def evaluate_patterns(self):
+        """
+        Evaluate all patterns, this must run once and exactly once before 
+        writing file metadata.
+        """
         for to_key in self.patterns.keys():
             from_key, pattern, replacement = self.patterns[to_key]
             from_value = self.metadatums[from_key]

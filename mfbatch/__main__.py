@@ -1,25 +1,27 @@
+"""
+mfbatch main - Command entrypoint for mfbatch
+"""
 # __main__.py
 
 import os
 from glob import glob
 from subprocess import run
-
+import sys
 from optparse import OptionParser
 import shlex
 from typing import Callable
 import inspect
+
+from tqdm import tqdm
 
 from mfbatch.util import readline_with_escaped_newlines
 import mfbatch.metaflac as flac
 from mfbatch.commands import BatchfileParser
 
 
-from tqdm import tqdm
-# import readline
-
-
 def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
-    with open(batch_list_path, mode='r') as f:
+    "Acts on a batch list"
+    with open(batch_list_path, mode='r', encoding='utf-8') as f:
         parser = BatchfileParser()
         parser.dry_run = dry_run
 
@@ -29,25 +31,28 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
 
 
 def create_batch_list(command_file: str):
-
-    with open(command_file, mode='w') as f:
+    """
+    Read all FLAC files in the cwd recursively and create a batchfile that 
+    re-creates all of their metadata.
+    """
+    with open(command_file, mode='w', encoding='utf-8') as f:
         f.write("# mfbatch\n\n")
         metadatums = {}
         flac_files = glob('./**/*.flac', recursive=True)
         flac_files = sorted(flac_files)
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
             this_file_metadata = flac.read_metadata(path)
-            for this_key in this_file_metadata.keys():
+            for this_key, this_value in this_file_metadata.items():
                 if this_key not in metadatums:
                     f.write(f":set {this_key} "
-                            f"{shlex.quote(this_file_metadata[this_key])}\n")
-                    metadatums[this_key] = this_file_metadata[this_key]
+                            f"{shlex.quote(this_value)}\n")
+                    metadatums[this_key] = this_value
                 else:
-                    if this_file_metadata[this_key] != metadatums[this_key]:
+                    if this_value != metadatums[this_key]:
                         f.write(f":set {this_key} "
-                                f"{shlex.quote(this_file_metadata[this_key])}"
+                                f"{shlex.quote(this_value)}"
                                 "\n")
-                        metadatums[this_key] = this_file_metadata[this_key]
+                        metadatums[this_key] = this_value
 
             keys = list(metadatums.keys())
             for key in keys:
@@ -59,6 +64,9 @@ def create_batch_list(command_file: str):
 
 
 def main():
+    """
+    Entry point implementation
+    """
     op = OptionParser(usage="%prog (-c | -e | -W) [options]")
 
     op.add_option('-c', '--create', default=False,
@@ -100,7 +108,7 @@ def main():
             if isinstance(meth, Callable):
                 print(f"{inspect.cleandoc(meth.__doc__ or '')}\n")
 
-        exit(0)
+        sys.exit(0)
 
     mode_given = False
     if options.path is not None:
@@ -113,7 +121,7 @@ def main():
     if options.edit:
         mode_given = True
         editor_command = [os.getenv('EDITOR'), options.batchfile]
-        run(editor_command)
+        run(editor_command, check=True)
 
     if options.write:
         mode_given = True
@@ -123,7 +131,7 @@ def main():
 
     if mode_given == False:
         op.print_usage()
-        exit(-1)
+        sys.exit(-1)
 
 
 if __name__ == "__main__":
