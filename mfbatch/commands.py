@@ -1,5 +1,5 @@
 """
-mfbatch commands and batchfile parser
+mfbatch commands - commands, batchfile parser and errors
 """
 
 # from string import Template
