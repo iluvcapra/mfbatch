@@ -1,5 +1,15 @@
 # mfbatch
 
+`mfbatch` is a command-line tool for batch-editing FLAC audio file metadata. 
+It reads a directory of FLAC files, extracts the existing metadata to an 
+intelligent text file format that the user can modify to update a large number
+of files and dynamic per-file metadata with a minimal number of edits.
+
+`mfbatch` is a front-end for `metaflac(1)` which must be installed on the
+system.
+
+## Motivation
+
 I've been reorganzing my sound effects library recently and have had to edit a 
 large number of FLAC files, adding and editing descriptions, normalizing 
 fields etc. and this is one of the tools I've come up with for updating a large
@@ -56,3 +66,14 @@ $ mfbatch -W
 Writing metadata is interactive, `mfbatch` will display the
 metdata to be written to each file and metadata can be
 edited interactively at a prompt before writing.
+
+## Limitations
+
+* Does not support newlines in field values. This is mostly by choice, newlines
+  don't offer any benefit in my preferred sound library programs but this
+  wouldn't be a tough feature to add if anyone needed it.
+* Does not support multiple artwork types, everything is stored as type `3`/
+  (album artwork-front).
+* Can only store unique field keys, field values of the same key overwrite old
+  values. This is also something that is tailored to my use-case and could be
+  changed if there was interest in doing so.
