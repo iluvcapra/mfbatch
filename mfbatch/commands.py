@@ -168,8 +168,9 @@ they appear in the batchfile.
         if args[0] in actions:
             try:
                 self.__getattribute__(args[0])(args[1:])
-            except KeyError:
-                raise CommandArgumentError(command=args[0], line=lineno)
+            except KeyError as exc:
+                raise CommandArgumentError(command=args[0], 
+                                           line=lineno) from exc
         else:
             raise UnrecognizedCommandError(command=args[0], line=lineno)
 
