@@ -1,7 +1,6 @@
 """
 mfbatch main - Command entrypoint for mfbatch
 """
-# __main__.py
 
 import os
 from glob import glob

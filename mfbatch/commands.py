@@ -1,8 +1,6 @@
 """
 mfbatch commands and batchfile parser
 """
-# commands.py
-# mfbatch
 
 # from string import Template
 import sys
