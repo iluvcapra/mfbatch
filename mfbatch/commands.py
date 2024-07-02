@@ -162,8 +162,8 @@ they appear in the batchfile.
 
     def _handle_command(self, line, lineno):
         args = shlex.split(line)
-        actions = [member for member in dir(self)
-                   if not (member.startswith('_') or member == 'eval') ]
+        actions = [m_name for m_name in dir(self)
+                   if not (m_name.startswith('_') or m_name == 'eval') ]
 
         if args[0] in actions:
             try:
@@ -202,12 +202,10 @@ they appear in the batchfile.
             else:
                 sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
 
-            for key in self.env.metadatums.keys():
+            for key, value in self.env.metadatums.items():
 
                 if key.startswith('_'):
                     continue
-
-                value = self.env.metadatums[key]
 
                 LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
                 value_lines = [value[i:i+LINE_LEN] for i in
