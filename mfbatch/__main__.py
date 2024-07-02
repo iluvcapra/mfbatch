@@ -29,7 +29,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
-def create_batch_list(command_file: str, recursive= True):
+def create_batch_list(command_file: str, recursive=True):
     """
     Read all FLAC files in the cwd and create a batchfile that re-creates all
     of their metadata.
@@ -69,31 +69,31 @@ def main():
     op = ArgumentParser(usage="%prog (-c | -e | -W) [options]")
 
     op.add_argument('-c', '--create', default=False,
-                  action='store_true',
-                  help='create a new list')
+                    action='store_true',
+                    help='create a new list')
     op.add_argument('-e', '--edit', action='store_true',
-                  help="open batch file in the default editor",
-                  default=False)
+                    help="open batch file in the default editor",
+                    default=False)
     op.add_argument('-W', '--write', default=False,
-                  action='store_true',
-                  help="execute batch list, write to files")
+                    action='store_true',
+                    help="execute batch list, write to files")
 
     op.add_argument('-p', '--path', metavar='DIR',
-                  help='chdir to DIR before running',
-                  default=None)
+                    help='chdir to DIR before running',
+                    default=None)
     op.add_argument('-n', '--dry-run', action='store_true',
-                  help="dry-run -W.")
+                    help="dry-run -W.")
     op.add_argument('-f', '--batchfile', metavar='FILE',
-                  help="use batch list FILE for reading and writing instead "
-                  "of the default \"MFBATCH_LIST\"",
-                  default='MFBATCH_LIST')
+                    help="use batch list FILE for reading and writing instead "
+                    "of the default \"MFBATCH_LIST\"",
+                    default='MFBATCH_LIST')
     op.add_argument('-y', '--yes', default=False, action='store_true',
-                  dest='yes', help="automatically confirm all prompts, "
-                  "inhibits interactive editing in -W mode")
+                    dest='yes', help="automatically confirm all prompts, "
+                    "inhibits interactive editing in -W mode")
     op.add_argument('--help-commands', action='store_true', default=False,
-                  dest='help_commands',
-                  help='print a list of available commands for batch lists '
-                  'and interactive writing.')
+                    dest='help_commands',
+                    help='print a list of available commands for batch lists '
+                    'and interactive writing.')
 
     options = op.parse_args()
 

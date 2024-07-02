@@ -50,7 +50,7 @@ class CommandEnv:
     artwork_desc: Optional[str]
 
     def __init__(self) -> None:
-        self.metadatums = {} 
+        self.metadatums = {}
         self.incr = {}
         self.patterns = {}
         self.onces = {}
@@ -163,13 +163,13 @@ they appear in the batchfile.
     def _handle_command(self, line, lineno):
         args = shlex.split(line)
         actions = [m_name for m_name in dir(self)
-                   if not (m_name.startswith('_') or m_name == 'eval') ]
+                   if not (m_name.startswith('_') or m_name == 'eval')]
 
         if args[0] in actions:
             try:
                 self.__getattribute__(args[0])(args[1:])
             except KeyError as exc:
-                raise CommandArgumentError(command=args[0], 
+                raise CommandArgumentError(command=args[0],
                                            line=lineno) from exc
         else:
             raise UnrecognizedCommandError(command=args[0], line=lineno)
@@ -190,7 +190,6 @@ they appear in the batchfile.
             self.env.increment_all()
             self.env.revert_onces()
             self.env.clear_file_keys()
-
 
         while True:
 
@@ -221,7 +220,7 @@ they appear in the batchfile.
             if interactive:
                 val = input('Write? [Y/n/a/:] > ')
                 if val == '' or val.startswith('Y') or val.startswith('y'):
-                    write_metadata_impl() 
+                    write_metadata_impl()
                     break
                 elif val.startswith(self.COMMAND_LEADER):
                     self._handle_command(val.lstrip(self.COMMAND_LEADER),
@@ -230,7 +229,7 @@ they appear in the batchfile.
                 elif val == 'a':
                     print("Aborting write session...", file=sys.stdout)
                     break
-            
+
             write_metadata_impl()
 
     def set(self, args):

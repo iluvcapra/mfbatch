@@ -70,5 +70,5 @@ def write_metadata(path: str, data: FlacMetadata,
 
         metadatum_f = metadatum_f + f"{key}={val}\n"
 
-    run([metaflac_path, "--import-tags-from=-", path],             
+    run([metaflac_path, "--import-tags-from=-", path],
         input=metadatum_f.encode('utf-8'), check=True)

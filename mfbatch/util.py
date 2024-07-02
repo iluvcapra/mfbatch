@@ -2,6 +2,7 @@
 mfbatch util - utility functions
 """
 
+
 def readline_with_escaped_newlines(f):
     """
     A readline line generator, except lines ending with a backslash will be
@@ -22,6 +23,5 @@ def readline_with_escaped_newlines(f):
             line = line[:-1]
             continue
 
-        else:
-            yield line, line_no
-            line = ''
+        yield line, line_no
+        line = ''
