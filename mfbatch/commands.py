@@ -227,17 +227,17 @@ they appear in the batchfile.
                     print("Aborting write session...", file=sys.stdout)
 
                 break
-            else:
-                if self.dry_run:
-                    print("DRY RUN would write metadata here.")
-                else:
-                    sys.stdout.write("Writing metadata... ")
-                    flac.write_metadata(line, self.env.metadatums)
-                    sys.stdout.write("Complete!")
 
-                self.env.increment_all()
-                self.env.revert_onces()
-                self.env.clear_file_keys()
+            if self.dry_run:
+                print("DRY RUN would write metadata here.")
+            else:
+                sys.stdout.write("Writing metadata... ")
+                flac.write_metadata(line, self.env.metadatums)
+                sys.stdout.write("Complete!")
+
+            self.env.increment_all()
+            self.env.revert_onces()
+            self.env.clear_file_keys()
 
     def set(self, args):
         """
