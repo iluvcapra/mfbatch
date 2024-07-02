@@ -188,6 +188,18 @@ they appear in the batchfile.
         self.env.revert_onces()
         self.env.clear_file_keys()
 
+    def _print_kv_columnar(self, key, value):
+        line_len = int(shutil.get_terminal_size()[0]) - 32
+        value_lines = [value[i:i+line_len] for i in
+                       range(0, len(value), line_len)]
+
+        for l in value_lines:
+            if key:
+                sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
+                key = None
+            else:
+                sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
+
     def _handle_file(self, line, interactive):
         while True:
 
@@ -204,16 +216,7 @@ they appear in the batchfile.
                 if key.startswith('_'):
                     continue
 
-                line_len = int(shutil.get_terminal_size()[0]) - 32
-                value_lines = [value[i:i+line_len] for i in
-                               range(0, len(value), line_len)]
-
-                for l in value_lines:
-                    if key:
-                        sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
-                        key = None
-                    else:
-                        sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
+                self._print_kv_columnar(key, value)
 
             if interactive:
                 val = input('Write? [Y/n/a/:] > ')
