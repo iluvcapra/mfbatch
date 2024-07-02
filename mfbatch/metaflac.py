@@ -1,11 +1,11 @@
-# metaflac.py 
+# metaflac.py
 # mfbatch
 
 from subprocess import run
 from re import match
 from io import StringIO
 
-from typing import Dict 
+from typing import Dict
 
 METAFLAC_PATH = '/opt/homebrew/bin/metaflac'
 
@@ -28,13 +28,13 @@ def sanatize_key(k: str) -> str:
     return rval
 
 
-def sanatize_value(v: str) -> str: 
+def sanatize_value(v: str) -> str:
     """
     Enforces the VORBIS_COMMENT spec with regard to values. Also removes 
     newlines, which are not supported by this tool.
     """
 
-    return v.translate(str.maketrans('\n',' '))
+    return v.translate(str.maketrans('\n', ' '))
 
 
 def read_metadata(path: str, metaflac_path=METAFLAC_PATH) -> FlacMetadata:
@@ -51,12 +51,12 @@ def read_metadata(path: str, metaflac_path=METAFLAC_PATH) -> FlacMetadata:
     return file_metadata
 
 
-def write_metadata(path: str, data: FlacMetadata, 
+def write_metadata(path: str, data: FlacMetadata,
                    metaflac_path=METAFLAC_PATH):
     remove_job = run([metaflac_path, '--remove-all-tags', path])
     remove_job.check_returncode()
 
-    metadatum_f = "" 
+    metadatum_f = ""
 
     for k in data.keys():
         key = sanatize_key(k)
@@ -64,9 +64,8 @@ def write_metadata(path: str, data: FlacMetadata,
         if key.startswith('_'):
             continue
 
-        metadatum_f  = metadatum_f + f"{key}={val}\n"
+        metadatum_f = metadatum_f + f"{key}={val}\n"
 
-    insert_job = run([metaflac_path, "--import-tags-from=-", path], 
+    insert_job = run([metaflac_path, "--import-tags-from=-", path],
                      input=metadatum_f.encode('utf-8'))
     insert_job.check_returncode()
-

@@ -1,5 +1,5 @@
-# commands.py 
-# mfbatch 
+# commands.py
+# mfbatch
 
 # from string import Template
 import sys
@@ -15,18 +15,19 @@ from typing import Dict, Tuple, Optional
 
 class UnrecognizedCommandError(Exception):
     command: str
-    line: int 
+    line: int
 
     def __init__(self, command, line) -> None:
-        self.command = command 
+        self.command = command
         self.line = line
+
 
 class CommandArgumentError(Exception):
     command: str
-    line: int 
+    line: int
 
     def __init__(self, command, line) -> None:
-        self.command = command 
+        self.command = command
         self.line = line
 
 
@@ -35,7 +36,7 @@ class CommandEnv:
     incr: Dict[str, str]
     patterns: Dict[str, Tuple[str, str, str]]
     onces: Dict[str, Optional[str]]
-    
+
     artwork_file: Optional[str]
     artwork_desc: Optional[str]
 
@@ -80,7 +81,7 @@ class CommandEnv:
         for key in keys:
             del self.metadatums[key]
             if self.onces[key] != None:
-                self.metadatums[key] = self.onces[key] or '' 
+                self.metadatums[key] = self.onces[key] or ''
 
             del self.onces[key]
 
@@ -88,8 +89,8 @@ class CommandEnv:
         for k in self.incr.keys():
             v = int(self.metadatums[k])
             self.metadatums[k] = self.incr[k] % (v + 1)
-            
-    
+
+
 class BatchfileParser:
     """
 A batchfile is a text file of lines. Lines either begin with a '#' to denote a
@@ -106,16 +107,15 @@ they appear in the batchfile.
 
     dry_run: bool
     env: CommandEnv
-    
+
     COMMAND_LEADER = ':'
     COMMENT_LEADER = '#'
 
-
     def __init__(self):
-        self.dry_run = True 
+        self.dry_run = True
         self.env = CommandEnv()
 
-    def _handle_line(self, line:str, lineno: int, interactive: bool):
+    def _handle_line(self, line: str, lineno: int, interactive: bool):
         if line.startswith(self.COMMAND_LEADER):
             self._handle_command(line.lstrip(self.COMMAND_LEADER), lineno)
         elif line.startswith(self.COMMENT_LEADER):
@@ -125,8 +125,8 @@ they appear in the batchfile.
 
     def _handle_command(self, line, lineno):
         args = shlex.split(line)
-        actions = [member for member in dir(self) \
-                if not member.startswith('_')]
+        actions = [member for member in dir(self)
+                   if not member.startswith('_')]
 
         if args[0] in actions:
             try:
@@ -139,7 +139,7 @@ they appear in the batchfile.
     def _handle_comment(self, _):
         pass
 
-    def _handle_file(self, line, interactive): 
+    def _handle_file(self, line, interactive):
         while True:
 
             self.env.set_file_keys(line)
@@ -148,19 +148,19 @@ they appear in the batchfile.
             if self.dry_run:
                 sys.stdout.write(f"\nDRY RUN File: \033[1m{line}\033[0m\n")
             else:
-                sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")            
+                sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
 
             for key in self.env.metadatums.keys():
 
                 if key.startswith('_'):
-                    continue 
+                    continue
 
                 value = self.env.metadatums[key]
 
                 LINE_LEN = int(shutil.get_terminal_size()[0]) - 32
-                value_lines = [value[i:i+LINE_LEN] for i in \
-                        range(0,len(value), LINE_LEN)]
-                
+                value_lines = [value[i:i+LINE_LEN] for i in
+                               range(0, len(value), LINE_LEN)]
+
                 for l in value_lines:
                     if key:
                         sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
@@ -183,7 +183,7 @@ they appear in the batchfile.
                     self.env.clear_file_keys()
 
                 elif val.startswith(self.COMMAND_LEADER):
-                    self._handle_command(val.lstrip(self.COMMAND_LEADER), 
+                    self._handle_command(val.lstrip(self.COMMAND_LEADER),
                                          lineno=-1)
                     continue
                 elif val == 'a':
@@ -211,7 +211,7 @@ they appear in the batchfile.
         """
         key = args[0]
         value = args[1]
-        self.env.metadatums[key] = value 
+        self.env.metadatums[key] = value
 
     def set1(self, args):
         """
@@ -273,8 +273,8 @@ they appear in the batchfile.
         inp = args[1]
         pattern = args[2]
         repl = args[3]
-        self.env.set_pattern(key,inp,pattern, repl)
-        
+        self.env.set_pattern(key, inp, pattern, repl)
+
     def d(self, args):
         """
         d VALUE
@@ -282,7 +282,3 @@ they appear in the batchfile.
         """
         val = args[0]
         self.env.set_once('DESCRIPTION', val)
-
-    
-    
-

@@ -1,4 +1,4 @@
-# __main__.py 
+# __main__.py
 
 import os
 from glob import glob
@@ -11,11 +11,12 @@ import inspect
 
 from mfbatch.util import readline_with_escaped_newlines
 import mfbatch.metaflac as flac
-from mfbatch.commands import BatchfileParser 
+from mfbatch.commands import BatchfileParser
 
 
 from tqdm import tqdm
 # import readline
+
 
 def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
     with open(batch_list_path, mode='r') as f:
@@ -35,7 +36,7 @@ def create_batch_list(command_file: str):
         flac_files = glob('./**/*.flac', recursive=True)
         flac_files = sorted(flac_files)
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            this_file_metadata = flac.read_metadata(path) 
+            this_file_metadata = flac.read_metadata(path)
             for this_key in this_file_metadata.keys():
                 if this_key not in metadatums:
                     f.write(f":set {this_key} "
@@ -59,20 +60,20 @@ def create_batch_list(command_file: str):
 
 def main():
     op = OptionParser(usage="%prog (-c | -e | -W) [options]")
-    
-    op.add_option('-c', '--create', default=False,       
+
+    op.add_option('-c', '--create', default=False,
                   action='store_true',
                   help='create a new list')
     op.add_option('-e', '--edit', action='store_true',
                   help="open batch file in the default editor",
                   default=False)
-    op.add_option('-W', '--write', default=False, 
+    op.add_option('-W', '--write', default=False,
                   action='store_true',
                   help="execute batch list, write to files")
-    
+
     op.add_option('-p', '--path', metavar='DIR',
                   help='chdir to DIR before running',
-                  default=None) 
+                  default=None)
     op.add_option('-n', '--dry-run', action='store_true',
                   help="dry-run -W.")
     op.add_option('-f', '--batchfile', metavar='FILE',
@@ -84,24 +85,24 @@ def main():
                   "inhibits interactive editing in -W mode")
     op.add_option('--help-commands', action='store_true', default=False,
                   dest='help_commands',
-                  help='print a list of available commands for batch lists '                  
-                  'and interactive writing.') 
+                  help='print a list of available commands for batch lists '
+                  'and interactive writing.')
 
     options, _ = op.parse_args()
 
     if options.help_commands:
         print("Command Help\n------------")
-        commands = [command for command in dir(BatchfileParser) if 
+        commands = [command for command in dir(BatchfileParser) if
                     not command.startswith('_')]
         print(f"{inspect.cleandoc(BatchfileParser.__doc__ or '')}\n\n")
         for command in commands:
             meth = getattr(BatchfileParser, command)
             if isinstance(meth, Callable):
                 print(f"{inspect.cleandoc(meth.__doc__ or '')}\n")
-            
+
         exit(0)
 
-    mode_given = False 
+    mode_given = False
     if options.path is not None:
         os.chdir(options.path)
 
@@ -113,11 +114,11 @@ def main():
         mode_given = True
         editor_command = [os.getenv('EDITOR'), options.batchfile]
         run(editor_command)
-    
+
     if options.write:
         mode_given = True
-        execute_batch_list(options.batchfile, 
-                           dry_run=options.dry_run, 
+        execute_batch_list(options.batchfile,
+                           dry_run=options.dry_run,
                            interactive=not options.yes)
 
     if mode_given == False:
@@ -127,5 +128,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-

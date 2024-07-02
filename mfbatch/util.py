@@ -1,4 +1,4 @@
-# util.py 
+# util.py
 
 def readline_with_escaped_newlines(f):
     line = ''
@@ -6,9 +6,9 @@ def readline_with_escaped_newlines(f):
     while True:
         line += f.readline()
         line_no += 1
-        
+
         if len(line) == 0:
-            break 
+            break
 
         line = line.rstrip("\n")
 
@@ -17,6 +17,5 @@ def readline_with_escaped_newlines(f):
             continue
 
         else:
-            yield line, line_no 
+            yield line, line_no
             line = ''
-
