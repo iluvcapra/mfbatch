@@ -81,21 +81,33 @@ class CommandEnv:
             self.metadatums[to_key] = re.sub(pattern, replacement, from_value)
 
     def set_once(self, key, value):
+        """
+        Establish a set-once key 
+        """
         self.onces[key] = self.metadatums.get(key, None)
         self.metadatums[key] = value
 
     def set_file_keys(self, path):
+        """
+        Establish the special file keys.
+        """
         apath = os.path.abspath(path)
         self.metadatums['_ABSPATH'] = apath
         dirname, self.metadatums['_FILENAME'] = os.path.split(apath)
         _, self.metadatums['_FOLDER'] = os.path.split(dirname)
 
     def clear_file_keys(self):
+        """
+        Delete the special file keys.
+        """
         del self.metadatums['_ABSPATH']
         del self.metadatums['_FILENAME']
         del self.metadatums['_FOLDER']
 
     def revert_onces(self):
+        """
+        Revert all set-once keys.
+        """
         keys = list(self.onces)
         for key in keys:
             del self.metadatums[key]
@@ -105,6 +117,9 @@ class CommandEnv:
             del self.onces[key]
 
     def increment_all(self):
+        """
+        Increment all increment keys.
+        """
         for k in self.incr.keys():
             v = int(self.metadatums[k])
             self.metadatums[k] = self.incr[k] % (v + 1)
@@ -134,7 +149,10 @@ they appear in the batchfile.
         self.dry_run = True
         self.env = CommandEnv()
 
-    def _handle_line(self, line: str, lineno: int, interactive: bool):
+    def eval(self, line: str, lineno: int, interactive: bool):
+        """
+        Accept a line from the file and act on it.
+        """
         if line.startswith(self.COMMAND_LEADER):
             self._handle_command(line.lstrip(self.COMMAND_LEADER), lineno)
         elif line.startswith(self.COMMENT_LEADER):
@@ -145,7 +163,7 @@ they appear in the batchfile.
     def _handle_command(self, line, lineno):
         args = shlex.split(line)
         actions = [member for member in dir(self)
-                   if not member.startswith('_')]
+                   if not (member.startswith('_') or member == 'eval') ]
 
         if args[0] in actions:
             try:

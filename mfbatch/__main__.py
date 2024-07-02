@@ -26,7 +26,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
 
         for line, line_no in readline_with_escaped_newlines(f):
             if len(line) > 0:
-                parser._handle_line(line, line_no, interactive)
+                parser.eval(line, line_no, interactive)
 
 
 def create_batch_list(command_file: str, recursive= True):
