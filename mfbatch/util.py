@@ -1,6 +1,12 @@
-# util.py
+"""
+mfbatch util - utility functions
+"""
 
 def readline_with_escaped_newlines(f):
+    """
+    A readline line generator, except lines ending with a backslash will be
+    combined with their successor.
+    """
     line = ''
     line_no = 0
     while True:
