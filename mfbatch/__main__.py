@@ -6,7 +6,7 @@ import os
 from glob import glob
 from subprocess import run
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 import shlex
 from typing import Callable
 import inspect
@@ -66,36 +66,36 @@ def main():
     """
     Entry point implementation
     """
-    op = OptionParser(usage="%prog (-c | -e | -W) [options]")
+    op = ArgumentParser(usage="%prog (-c | -e | -W) [options]")
 
-    op.add_option('-c', '--create', default=False,
+    op.add_argument('-c', '--create', default=False,
                   action='store_true',
                   help='create a new list')
-    op.add_option('-e', '--edit', action='store_true',
+    op.add_argument('-e', '--edit', action='store_true',
                   help="open batch file in the default editor",
                   default=False)
-    op.add_option('-W', '--write', default=False,
+    op.add_argument('-W', '--write', default=False,
                   action='store_true',
                   help="execute batch list, write to files")
 
-    op.add_option('-p', '--path', metavar='DIR',
+    op.add_argument('-p', '--path', metavar='DIR',
                   help='chdir to DIR before running',
                   default=None)
-    op.add_option('-n', '--dry-run', action='store_true',
+    op.add_argument('-n', '--dry-run', action='store_true',
                   help="dry-run -W.")
-    op.add_option('-f', '--batchfile', metavar='FILE',
+    op.add_argument('-f', '--batchfile', metavar='FILE',
                   help="use batch list FILE for reading and writing instead "
                   "of the default \"MFBATCH_LIST\"",
                   default='MFBATCH_LIST')
-    op.add_option('-y', '--yes', default=False, action='store_true',
+    op.add_argument('-y', '--yes', default=False, action='store_true',
                   dest='yes', help="automatically confirm all prompts, "
                   "inhibits interactive editing in -W mode")
-    op.add_option('--help-commands', action='store_true', default=False,
+    op.add_argument('--help-commands', action='store_true', default=False,
                   dest='help_commands',
                   help='print a list of available commands for batch lists '
                   'and interactive writing.')
 
-    options, _ = op.parse_args()
+    options = op.parse_args()
 
     if options.help_commands:
         print("Command Help\n------------")
