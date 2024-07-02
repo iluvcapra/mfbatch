@@ -1,9 +1,9 @@
-# metaflac.py
-# mfbatch
+"""
+mbatch metaflac - Read/write metadata functions
+"""
 
 from subprocess import run
 from re import match
-from io import StringIO
 
 from typing import Dict
 
@@ -38,9 +38,11 @@ def sanatize_value(v: str) -> str:
 
 
 def read_metadata(path: str, metaflac_path=METAFLAC_PATH) -> FlacMetadata:
+    """
+    Read metadata from a FLAC file
+    """
     metaflac_command = [metaflac_path, '--list']
-    result = run(metaflac_command + [path], capture_output=True)
-    result.check_returncode()
+    result = run(metaflac_command + [path], capture_output=True, check=True)
 
     file_metadata = {}
     for line in result.stdout.decode('utf-8').splitlines():
@@ -53,8 +55,10 @@ def read_metadata(path: str, metaflac_path=METAFLAC_PATH) -> FlacMetadata:
 
 def write_metadata(path: str, data: FlacMetadata,
                    metaflac_path=METAFLAC_PATH):
-    remove_job = run([metaflac_path, '--remove-all-tags', path])
-    remove_job.check_returncode()
+    """
+    Write metadata to a FLAC file
+    """
+    run([metaflac_path, '--remove-all-tags', path], check=True)
 
     metadatum_f = ""
 
