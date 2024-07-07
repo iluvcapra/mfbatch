@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mfbatch"
-version = "0.4.0"
+version = "0.4.1"
 description = "MetaFlac batch editor"
 authors = ["Jamie Hardt <jamiehardt@me.com>"]
 readme = "README.md"
