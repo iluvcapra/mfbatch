@@ -66,7 +66,7 @@ def main():
     """
     Entry point implementation
     """
-    op = ArgumentParser(usage="%prog (-c | -e | -W) [options]")
+    op = ArgumentParser(prog='mfbatch', usage='%(prog)s (-c | -e | -W) [options]')
 
     op.add_argument('-c', '--create', default=False,
                     action='store_true',
