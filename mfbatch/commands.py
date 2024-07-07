@@ -278,7 +278,7 @@ they appear in the batchfile.
         """
         reset 
         All keys in the environment will be reset, subsequent files will have 
-        no keys set.
+        no keys set, including keys set by the `setinc` and `setp` commands.
         """
         all_keys = list(self.env.metadatums.keys())
         for k in all_keys:
