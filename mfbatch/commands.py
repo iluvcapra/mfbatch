@@ -11,7 +11,7 @@ import os.path
 
 from typing import Dict, Tuple, Optional
 
-import mfbatch.metaflac as flac
+from mfbatch.metaflac import write_metadata as flac 
 
 
 class UnrecognizedCommandError(Exception):
@@ -158,6 +158,7 @@ they appear in the batchfile.
     def __init__(self):
         self.dry_run = True
         self.env = CommandEnv()
+        self.write_metadata_f = flac
 
     def eval(self, line: str, lineno: int, interactive: bool):
         """
@@ -192,7 +193,7 @@ they appear in the batchfile.
             print("DRY RUN would write metadata here.")
         else:
             sys.stdout.write("Writing metadata... ")
-            flac.write_metadata(line, self.env.metadatums)
+            self.write_metadata_f(line, self.env.metadatums)
             sys.stdout.write("Complete!")
 
         self.env.increment_all()
