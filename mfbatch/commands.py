@@ -63,15 +63,6 @@ class CommandEnv:
 
         self.incr.pop(k, None)
         self.patterns.pop(k, None)
-        
-        # delete all patterns that refer to the key
-        refs = []
-        for pattern_key, (frm, _, _) in self.patterns:
-            if frm == k:
-                refs.append(pattern_key)
-
-        for ref in refs:
-            del self.patterns[ref]
 
 
     def reset_keys(self):
@@ -79,6 +70,9 @@ class CommandEnv:
 
         for key in all_keys:
             self.unset_key(key)
+
+        self.patterns = {}
+        self.incr = {}
 
 
     def set_pattern(self, to: str, frm: str, pattern: str, repl: str):
