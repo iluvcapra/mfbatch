@@ -14,7 +14,7 @@ import inspect
 from tqdm import tqdm
 
 from mfbatch.util import readline_with_escaped_newlines
-import mfbatch.metaflac as flac
+import mfbatch.metaflac as metadata_funcs
 from mfbatch.commands import BatchfileParser
 
 
@@ -40,7 +40,7 @@ def create_batch_list(command_file: str, recursive=True):
         flac_files = glob('./**/*.flac', recursive=recursive)
         flac_files = sorted(flac_files)
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            this_file_metadata = flac.read_metadata(path)
+            this_file_metadata = metadata_funcs.read_metadata(path)
             for this_key, this_value in this_file_metadata.items():
                 if this_key not in metadatums:
                     f.write(f":set {this_key} "
@@ -66,7 +66,8 @@ def main():
     """
     Entry point implementation
     """
-    op = ArgumentParser(prog='mfbatch', usage='%(prog)s (-c | -e | -W) [options]')
+    op = ArgumentParser(
+        prog='mfbatch', usage='%(prog)s (-c | -e | -W) [options]')
 
     op.add_argument('-c', '--create', default=False,
                     action='store_true',

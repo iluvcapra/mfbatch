@@ -11,7 +11,7 @@ import os.path
 
 from typing import Dict, Tuple, Optional
 
-from mfbatch.metaflac import write_metadata as flac 
+from mfbatch.metaflac import write_metadata as flac
 
 
 class UnrecognizedCommandError(Exception):
@@ -64,8 +64,10 @@ class CommandEnv:
         self.incr.pop(k, None)
         self.patterns.pop(k, None)
 
-
     def reset_keys(self):
+        """
+        Reset all keys in the environment
+        """
         all_keys = list(self.metadatums.keys())
 
         for key in all_keys:
@@ -73,7 +75,6 @@ class CommandEnv:
 
         self.patterns = {}
         self.incr = {}
-
 
     def set_pattern(self, to: str, frm: str, pattern: str, repl: str):
         """
