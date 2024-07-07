@@ -4,6 +4,16 @@ version = "0.3.0"
 description = "MetaFlac batch editor"
 authors = ["Jamie Hardt <jamiehardt@me.com>"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/iluvcapra/mfbatch"
+repository = "https://github.com/iluvcapra/mfbatch.git"
+keywords = ['flac', 'metadata', 'audio', 'multimedia', 'console', 'scripting']
+classifiers = [
+  'Development Status :: 4 - Beta',
+  'Environment :: Console',
+  'License :: OSI Approved :: MIT License',
+  'Topic :: Multimedia :: Sound/Audio :: Editors',
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
