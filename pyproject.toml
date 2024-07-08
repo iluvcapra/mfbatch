@@ -13,6 +13,10 @@ classifiers = [
   'Environment :: Console',
   'License :: OSI Approved :: MIT License',
   'Topic :: Multimedia :: Sound/Audio :: Editors',
+  'Programming Language :: Python :: 3.12',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.9',
 ]
 
 [tool.poetry.dependencies]
