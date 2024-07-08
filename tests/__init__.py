@@ -11,6 +11,7 @@ class BatchfileParserTests(unittest.TestCase):
     """
     Tests the BatchfileParser class
     """
+
     def setUp(self):
         self.command_parser = BatchfileParser()
         self.command_parser.dry_run = False
@@ -49,15 +50,14 @@ class BatchfileParserTests(unittest.TestCase):
         "Test setp command"
         self.command_parser.set(['VAL', 'ABC123'])
         self.command_parser.setp(['DONE', 'VAL', r"([A-Z]+)123", r"X\1"])
-        self.command_parser.eval("./testfile.flac", lineno=1, 
+        self.command_parser.eval("./testfile.flac", lineno=1,
                                  interactive=False)
 
-        self.assertTrue(cast(MagicMock, 
+        self.assertTrue(cast(MagicMock,
                              self.command_parser.write_metadata_f).called)
-        self.assertEqual(cast(MagicMock, 
+        self.assertEqual(cast(MagicMock,
                               self.command_parser.write_metadata_f).call_args.args,
                          ("./testfile.flac", {'VAL': 'ABC123', 'DONE': 'XABC'}))
-
 
     def test_eval(self):
         "Test eval"
