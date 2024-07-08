@@ -7,7 +7,7 @@ from typing import cast
 from mfbatch.commands import BatchfileParser
 
 
-class CommandTests(unittest.TestCase):
+class BatchfileParserTests(unittest.TestCase):
     """
     Tests the BatchfileParser class
     """
@@ -47,6 +47,17 @@ class CommandTests(unittest.TestCase):
 
     def test_setp(self):
         "Test setp command"
+        self.command_parser.set(['VAL', 'ABC123'])
+        self.command_parser.setp(['DONE', 'VAL', r"([A-Z]+)123", r"X\1"])
+        self.command_parser.eval("./testfile.flac", lineno=1, 
+                                 interactive=False)
+
+        self.assertTrue(cast(MagicMock, 
+                             self.command_parser.write_metadata_f).called)
+        self.assertEqual(cast(MagicMock, 
+                              self.command_parser.write_metadata_f).call_args.args,
+                         ("./testfile.flac", {'VAL': 'ABC123', 'DONE': 'XABC'}))
+
 
     def test_eval(self):
         "Test eval"
