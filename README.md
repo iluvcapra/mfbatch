@@ -1,6 +1,5 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/iluvcapra/mfbatch)
 ![](https://img.shields.io/github/license/iluvcapra/mfbatch.svg) ![](https://img.shields.io/pypi/pyversions/mfbatch.svg) [![](https://img.shields.io/pypi/v/mfbatch.svg)](https://pypi.org/project/mfbatch/) ![](https://img.shields.io/pypi/wheel/mfbatch.svg)
-![](https://img.shields.io/pypi/wheel/pycmx.svg)
 
 [![Lint and Test](https://github.com/iluvcapra/mfbatch/actions/workflows/pylint.yml/badge.svg)](https://github.com/iluvcapra/mfbatch/actions/workflows/pylint.yml)
 
