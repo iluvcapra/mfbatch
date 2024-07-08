@@ -9,7 +9,7 @@ import shutil
 import re
 import os.path
 
-from typing import Dict, Tuple, Optional
+from typing import Callable, Dict, Tuple, Optional
 
 from mfbatch.metaflac import write_metadata as flac
 
@@ -152,6 +152,7 @@ they appear in the batchfile.
 
     dry_run: bool
     env: CommandEnv
+    write_metadata_f: Callable
 
     COMMAND_LEADER = ':'
     COMMENT_LEADER = '#'
@@ -160,6 +161,7 @@ they appear in the batchfile.
         self.dry_run = True
         self.env = CommandEnv()
         self.write_metadata_f = flac
+        self.outstream = sys.stdout
 
     def eval(self, line: str, lineno: int, interactive: bool):
         """
@@ -191,11 +193,11 @@ they appear in the batchfile.
 
     def _write_metadata_impl(self, line):
         if self.dry_run:
-            print("DRY RUN would write metadata here.")
+            print("DRY RUN would write metadata here.", file=self.outstream)
         else:
-            sys.stdout.write("Writing metadata... ")
+            self.outstream.write("Writing metadata... ")
             self.write_metadata_f(line, self.env.metadatums)
-            sys.stdout.write("Complete!")
+            self.outstream.write("Complete!")
 
         self.env.increment_all()
         self.env.revert_onces()
@@ -208,10 +210,10 @@ they appear in the batchfile.
 
         for l in value_lines:
             if key:
-                sys.stdout.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
+                self.outstream.write(f"{key:.<30}  \033[4m{l}\033[0m\n")
                 key = None
             else:
-                sys.stdout.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
+                self.outstream.write(f"{' ' * 30}  \033[4m{l}\033[0m\n")
 
     def _handle_file(self, line, interactive):
         while True:
@@ -220,9 +222,9 @@ they appear in the batchfile.
             self.env.evaluate_patterns()
 
             if self.dry_run:
-                sys.stdout.write(f"\nDRY RUN File: \033[1m{line}\033[0m\n")
+                self.outstream.write(f"\nDRY RUN File: \033[1m{line}\033[0m\n")
             else:
-                sys.stdout.write(f"\nFile: \033[1m{line}\033[0m\n")
+                self.outstream.write(f"\nFile: \033[1m{line}\033[0m\n")
 
             for key, value in self.env.metadatums.items():
 
