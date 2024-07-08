@@ -1,4 +1,4 @@
-name: Pylint
+name: Lint and Test
 
 on: [push]
 
@@ -18,7 +18,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-        pip install tqdm
+        pip install .
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
+    - name: Testing with unittest
+      run: |
+        python -m unittest tests
+
