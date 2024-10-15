@@ -140,7 +140,8 @@ class BatchfileParser:
     """
 A batchfile is a text file of lines. Lines either begin with a '#' to denote a
 comment, a ':' to denote a Command, and if neither of these are present, the
-line is interpreted as a file path to act upon. Empty lines are ignored.
+line is interpreted as a file path to act upon. Empty lines are ignored. Lines 
+are split into arguments using `shlex.split`.
 
 If a line ends with a backslash '\\', the backslash is deleted and the contents
 of the following line are appended to the end of the present line.
