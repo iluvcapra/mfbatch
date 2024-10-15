@@ -26,7 +26,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
 
         for line, line_no in readline_with_escaped_newlines(f):
             if len(line) > 0:
-                parser.eval(line, line_no, interactive)
+                parser._eval(line, line_no, interactive)
 
 
 def create_batch_list(command_file: str, recursive=True):
@@ -106,7 +106,7 @@ def main():
         for command in commands:
             meth = getattr(BatchfileParser, command)
             if isinstance(meth, Callable):
-                print(f"{inspect.cleandoc(meth.__doc__ or '')}\n")
+                print(f"- {inspect.cleandoc(meth.__doc__ or '')}\n")
 
         sys.exit(0)
 

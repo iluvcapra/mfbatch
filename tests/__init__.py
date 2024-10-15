@@ -31,7 +31,7 @@ class BatchfileParserTests(unittest.TestCase):
     def test_set_command(self):
         "Test set command"
         self.command_parser.set(['X', 'Y'])
-        self.command_parser.eval("./testfile.flac", lineno=1,
+        self.command_parser._eval("./testfile.flac", lineno=1,
                                  interactive=False)
         self.assertTrue(cast(MagicMock,
                              self.command_parser.write_metadata_f).called)
@@ -50,7 +50,7 @@ class BatchfileParserTests(unittest.TestCase):
         "Test setp command"
         self.command_parser.set(['VAL', 'ABC123'])
         self.command_parser.setp(['DONE', 'VAL', r"([A-Z]+)123", r"X\1"])
-        self.command_parser.eval("./testfile.flac", lineno=1,
+        self.command_parser._eval("./testfile.flac", lineno=1,
                                  interactive=False)
 
         self.assertTrue(cast(MagicMock,
@@ -61,5 +61,5 @@ class BatchfileParserTests(unittest.TestCase):
 
     def test_eval(self):
         "Test eval"
-        self.command_parser.eval(":set A 1", 1, False)
+        self.command_parser._eval(":set A 1", 1, False)
         self.assertEqual(self.command_parser.env.metadatums['A'], '1')
