@@ -164,7 +164,7 @@ they appear in the batchfile.
         self.write_metadata_f = flac
         self.outstream = sys.stdout
 
-    def _eval(self, line: str, lineno: int, interactive: bool):
+    def eval(self, line: str, lineno: int, interactive: bool):
         """
         Accept a line from the file and act on it.
         """

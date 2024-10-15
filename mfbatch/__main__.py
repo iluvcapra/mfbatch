@@ -26,7 +26,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
 
         for line, line_no in readline_with_escaped_newlines(f):
             if len(line) > 0:
-                parser._eval(line, line_no, interactive)
+                parser.eval(line, line_no, interactive)
 
 
 def create_batch_list(command_file: str, recursive=True):
@@ -101,7 +101,7 @@ def main():
     if options.help_commands:
         print("Command Help\n------------")
         commands = [command for command in dir(BatchfileParser) if
-                    not command.startswith('_')]
+                    not command.startswith('_') or command is not "eval"]
         print(f"{inspect.cleandoc(BatchfileParser.__doc__ or '')}\n\n")
         for command in commands:
             meth = getattr(BatchfileParser, command)
