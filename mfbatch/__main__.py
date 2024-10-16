@@ -42,15 +42,15 @@ def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
         f.write("# mfbatch\n\n")
         metadatums = {}
         flac_files = glob('./**/*.flac', recursive=recursive)
-        
+
         if sort_mode == 'path':
             flac_files = sorted(flac_files)
         elif sort_mode == 'mtime':
-            flac_files = sorted(flac_files, key=lambda f: os.path.getmtime(f))
+            flac_files = sorted(flac_files, key=os.path.getmtime)
         elif sort_mode == 'ctime':
-            flac_files = sorted(flac_files, key=lambda f: os.path.getctime(f))
+            flac_files = sorted(flac_files, key=os.path.getctime)
         elif sort_mode == 'name':
-            flac_files = sorted(flac_files, key=lambda f: os.path.basename(f))
+            flac_files = sorted(flac_files, key=os.path.basename)
 
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
             try:
@@ -100,10 +100,10 @@ def main():
     op.add_argument('-p', '--path', metavar='DIR',
                     help='chdir to DIR before running',
                     default=None)
-    op.add_argument('-s', '--sort', metavar='MODE', action='store', 
+    op.add_argument('-s', '--sort', metavar='MODE', action='store',
                     default='path', help="when creating, Set mode to sort "
-                    "files by. Default is 'path'. 'ctime, 'mtime' and 'name' " 
-                    "are also options.") 
+                    "files by. Default is 'path'. 'ctime, 'mtime' and 'name' "
+                    "are also options.")
     op.add_argument('-n', '--dry-run', action='store_true',
                     help="dry-run -W.")
     op.add_argument('-f', '--batchfile', metavar='FILE',
