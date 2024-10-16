@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mfbatch"
-version = "0.5.0"
+version = "0.5.1"
 description = "MetaFlac batch editor"
 authors = ["Jamie Hardt <jamiehardt@me.com>"]
 readme = "README.md"
@@ -13,6 +13,7 @@ classifiers = [
   'Environment :: Console',
   'License :: OSI Approved :: MIT License',
   'Topic :: Multimedia :: Sound/Audio :: Editors',
+  'Programming Language :: Python :: 3.13',
   'Programming Language :: Python :: 3.12',
   'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: 3.10',
