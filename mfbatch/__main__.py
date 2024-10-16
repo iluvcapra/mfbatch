@@ -123,7 +123,7 @@ def main():
     if options.help_commands:
         print("Command Help\n------------")
         commands = [command for command in dir(BatchfileParser) if
-                    not command.startswith('_') or command != "eval"]
+                    not command.startswith('_') and command != "eval"]
         print(f"{inspect.cleandoc(BatchfileParser.__doc__ or '')}\n\n")
         for command in commands:
             meth = getattr(BatchfileParser, command)
