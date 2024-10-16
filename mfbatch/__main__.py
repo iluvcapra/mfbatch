@@ -78,7 +78,6 @@ def main():
     op.add_argument('-W', '--write', default=False,
                     action='store_true',
                     help="execute batch list, write to files")
-
     op.add_argument('-p', '--path', metavar='DIR',
                     help='chdir to DIR before running',
                     default=None)
