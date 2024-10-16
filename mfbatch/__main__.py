@@ -56,7 +56,7 @@ def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
             try:
                 this_file_metadata = metadata_funcs.read_metadata(path)
             except CalledProcessError as e:
-                f.write(f"# !!! ERROR ({e.returncode}) while reading "
+                f.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
                         f"metadata from the file {path}\n\n")
                 continue
 
