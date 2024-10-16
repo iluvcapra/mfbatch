@@ -100,6 +100,10 @@ def main():
     op.add_argument('-p', '--path', metavar='DIR',
                     help='chdir to DIR before running',
                     default=None)
+    op.add_argument('-s', '--sort', metavar='MODE', action='store', 
+                    default='path', help="when creating, Set mode to sort "
+                    "files by. Default is 'path'. 'ctime, 'mtime' and 'name' " 
+                    "are also options.") 
     op.add_argument('-n', '--dry-run', action='store_true',
                     help="dry-run -W.")
     op.add_argument('-f', '--batchfile', metavar='FILE',
@@ -134,7 +138,7 @@ def main():
 
     if options.create:
         mode_given = True
-        create_batch_list(options.batchfile)
+        create_batch_list(options.batchfile, sort_mode=options.sort)
 
     if options.edit:
         mode_given = True
