@@ -4,7 +4,7 @@ mfbatch main - Command entrypoint for mfbatch
 
 import os
 from glob import glob
-from subprocess import run
+from subprocess import CalledProcessError, run
 import sys
 from argparse import ArgumentParser
 import shlex
@@ -29,18 +29,37 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
-def create_batch_list(command_file: str, recursive=True):
+def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
     """
     Read all FLAC files in the cwd and create a batchfile that re-creates all
     of their metadata.
+
+    :param recursive: Recursively enter directories
+    :param sort_mode: Order of paths in the batch list. Either 'path', 
+        'mtime', 'ctime', 'name'
     """
     with open(command_file, mode='w', encoding='utf-8') as f:
         f.write("# mfbatch\n\n")
         metadatums = {}
         flac_files = glob('./**/*.flac', recursive=recursive)
-        flac_files = sorted(flac_files)
+        
+        if sort_mode == 'path':
+            flac_files = sorted(flac_files)
+        elif sort_mode == 'mtime':
+            flac_files = sorted(flac_files, key=lambda f: os.path.getmtime(f))
+        elif sort_mode == 'ctime':
+            flac_files = sorted(flac_files, key=lambda f: os.path.getctime(f))
+        elif sort_mode == 'name':
+            flac_files = sorted(flac_files, key=lambda f: os.path.basename(f))
+
         for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            this_file_metadata = metadata_funcs.read_metadata(path)
+            try:
+                this_file_metadata = metadata_funcs.read_metadata(path)
+            except CalledProcessError as e:
+                f.write(f"# !!! ERROR ({e.returncode}) while reading "
+                        f"metadata from the file {path}\n\n")
+                continue
+
             for this_key, this_value in this_file_metadata.items():
                 if this_key not in metadatums:
                     f.write(f":set {this_key} "
