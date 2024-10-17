@@ -329,3 +329,18 @@ they appear in the batchfile.
         """
         val = args[0]
         self.env.set_once('DESCRIPTION', val)
+
+    # def picture(self, args):
+    #     """
+    #     picture PATH
+    #     Add PATH as a picture (flac picture type 0) to this and every
+    #     subsequent file. 
+    #     """
+    #     pass 
+    #
+    # def nopicture(self, args):
+    #     """
+    #     unpicture 
+    #     Remove all p
+    #     """
+    #     pass
