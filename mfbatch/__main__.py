@@ -40,20 +40,20 @@ def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
     """
     with open(command_file, mode='w', encoding='utf-8') as f:
         f.write("# mfbatch\n\n")
-        f.write("""
-# :set DESCRIPTION ""
-# :set TITLE ""
-# :set VERSION ""
-# :set ALBUM ""
-# :set ARTIST ""
-# :set TRACKNUMBER ""
-# :set COPYRIGHT ""
-# :set LICENSE ""
-# :set CONTACT ""
-# :set ORGAIZATION ""
-# :set LOCATION ""
-# :set MICROPHONE ""
-                """)
+#         f.write("""
+# # :set DESCRIPTION ""
+# # :set TITLE ""
+# # :set VERSION ""
+# # :set ALBUM ""
+# # :set ARTIST ""
+# # :set TRACKNUMBER ""
+# # :set COPYRIGHT ""
+# # :set LICENSE ""
+# # :set CONTACT ""
+# # :set ORGAIZATION ""
+# # :set LOCATION ""
+# # :set MICROPHONE ""
+#                 """)
         metadatums = {}
         flac_files = glob('./**/*.flac', recursive=recursive)
 
