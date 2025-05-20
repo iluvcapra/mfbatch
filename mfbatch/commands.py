@@ -334,13 +334,13 @@ they appear in the batchfile.
     #     """
     #     picture PATH
     #     Add PATH as a picture (flac picture type 0) to this and every
-    #     subsequent file. 
+    #     subsequent file.
     #     """
-    #     pass 
+    #     pass
     #
     # def nopicture(self, args):
     #     """
-    #     unpicture 
+    #     unpicture
     #     Remove all p
     #     """
     #     pass
