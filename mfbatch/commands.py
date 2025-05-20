@@ -131,9 +131,9 @@ class CommandEnv:
         """
         Increment all increment keys.
         """
-        for k, v in self.incr.items():
-            v = int(v)
-            self.metadatums[k] = self.incr[k] % (v + 1)
+        for k, _ in self.incr.items():
+            val = int(self.metadatums[k])
+            self.metadatums[k] = self.incr[k] % (val + 1)
 
 
 class BatchfileParser:
