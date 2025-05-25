@@ -8,8 +8,9 @@ from subprocess import CalledProcessError, run
 import sys
 from argparse import ArgumentParser
 import shlex
-from typing import Callable
+from typing import Callable, List, Tuple
 import inspect
+from io import StringIO
 
 from tqdm import tqdm
 
@@ -29,70 +30,83 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
-def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
+def sort_flac_files(file_list, mode):
+    "Sort flac files"
+    if mode == 'path':
+        return sorted(file_list)
+    if mode == 'mtime':
+        return sorted(file_list, key=os.path.getmtime)
+    if mode == 'ctime':
+        return sorted(file_list, key=os.path.getctime)
+    if mode == 'name':
+        return sorted(file_list, key=os.path.basename)
+
+    return file_list
+
+
+def write_batchfile_entries_for_file(path, metadatums) -> Tuple[dict, str]:
+    "Create batchfile entries for `path`"
+    buffer = StringIO()
+
+    try:
+        this_file_metadata = metadata_funcs.read_metadata(path)
+
+    except CalledProcessError as e:
+        buffer.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
+                     f"metadata from the file {path}\n\n")
+        return metadatums, buffer.getvalue()
+
+    for this_key, this_value in this_file_metadata.items():
+        if this_key not in metadatums:
+            buffer.write(f":set {this_key} "
+                         f"{shlex.quote(this_value)}\n")
+            metadatums[this_key] = this_value
+        else:
+            if this_value != metadatums[this_key]:
+                buffer.write(f":set {this_key} "
+                             f"{shlex.quote(this_value)}"
+                             "\n")
+                metadatums[this_key] = this_value
+
+    keys = list(metadatums.keys())
+    for key in keys:
+        if key not in this_file_metadata:
+            buffer.write(f":unset {key}\n")
+            del metadatums[key]
+
+    buffer.write(path + "\n\n")
+
+    return metadatums, buffer.getvalue()
+
+
+def create_batch_list(flac_files: List[str], command_file: str,
+                      sort_mode='path'):
     """
     Read all FLAC files in the cwd and create a batchfile that re-creates all
     of their metadata.
 
-    :param recursive: Recursively enter directories
+    :param flac_files: Paths of files to create batchfile from 
+    :param command_file: Name of new batchfile
     :param sort_mode: Order of paths in the batch list. Either 'path', 
         'mtime', 'ctime', 'name'
+    :param input_files: FLAC files to scan
     """
+
+    flac_files = sort_flac_files(flac_files, sort_mode)
+
     with open(command_file, mode='w', encoding='utf-8') as f:
-        f.write("# mfbatch\n\n")
-#         f.write("""
-# # :set DESCRIPTION ""
-# # :set TITLE ""
-# # :set VERSION ""
-# # :set ALBUM ""
-# # :set ARTIST ""
-# # :set TRACKNUMBER ""
-# # :set COPYRIGHT ""
-# # :set LICENSE ""
-# # :set CONTACT ""
-# # :set ORGAIZATION ""
-# # :set LOCATION ""
-# # :set MICROPHONE ""
-#                 """)
         metadatums = {}
-        flac_files = glob('./**/*.flac', recursive=recursive)
 
-        if sort_mode == 'path':
-            flac_files = sorted(flac_files)
-        elif sort_mode == 'mtime':
-            flac_files = sorted(flac_files, key=os.path.getmtime)
-        elif sort_mode == 'ctime':
-            flac_files = sorted(flac_files, key=os.path.getctime)
-        elif sort_mode == 'name':
-            flac_files = sorted(flac_files, key=os.path.basename)
+        f.write("# mfbatch\n\n")
 
-        for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            try:
-                this_file_metadata = metadata_funcs.read_metadata(path)
-            except CalledProcessError as e:
-                f.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
-                        f"metadata from the file {path}\n\n")
-                continue
+        for path in tqdm(flac_files, unit='File',
+                         desc='Scanning with metaflac...'):
 
-            for this_key, this_value in this_file_metadata.items():
-                if this_key not in metadatums:
-                    f.write(f":set {this_key} "
-                            f"{shlex.quote(this_value)}\n")
-                    metadatums[this_key] = this_value
-                else:
-                    if this_value != metadatums[this_key]:
-                        f.write(f":set {this_key} "
-                                f"{shlex.quote(this_value)}"
-                                "\n")
-                        metadatums[this_key] = this_value
+            metadatums, buffer = write_batchfile_entries_for_file(path,
+                                                                  metadatums)
+            f.write(buffer)
 
-            keys = list(metadatums.keys())
-            for key in keys:
-                if key not in this_file_metadata:
-                    f.write(f":unset {key}\n")
-                    del metadatums[key]
-
-            f.write(path + "\n\n")
+        f.write("# mfbatch: create batchlist operation complete\n")
 
 
 def main():
@@ -105,6 +119,10 @@ def main():
     op.add_argument('-c', '--create', default=False,
                     action='store_true',
                     help='create a new list')
+    op.add_argument('-F', '--from-file', metavar='FILE_LIST', action='store',
+                    default=None, help="get file paths from FILE_LIST when "
+                    "creating, instead of scanning directory"
+                    "a new list")
     op.add_argument('-e', '--edit', action='store_true',
                     help="open batch file in the default editor",
                     default=False)
@@ -152,7 +170,18 @@ def main():
 
     if options.create:
         mode_given = True
-        create_batch_list(options.batchfile, sort_mode=options.sort)
+        flac_files: List[str] = []
+
+        if options.from_file:
+            with open(options.from_file, mode='r',
+                      encoding='utf-8') as from_file:
+                flac_files = [line.strip() for line in from_file.readlines()]
+        else:
+            flac_files = glob('./**/*.flac', recursive=True)
+
+        # print(flac_files)
+        create_batch_list(flac_files, options.batchfile,
+                          sort_mode=options.sort)
 
     if options.edit:
         mode_given = True
