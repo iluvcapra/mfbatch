@@ -31,19 +31,21 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
 
 
 def sort_flac_files(file_list, mode):
+    "Sort flac files"
     if mode == 'path':
         return sorted(file_list)
-    elif mode == 'mtime':
+    if mode == 'mtime':
         return sorted(file_list, key=os.path.getmtime)
-    elif mode == 'ctime':
+    if mode == 'ctime':
         return sorted(file_list, key=os.path.getctime)
-    elif mode == 'name':
+    if mode == 'name':
         return sorted(file_list, key=os.path.basename)
-    else:
-        return file_list
+
+    return file_list
 
 
 def write_batchfile_entries_for_file(path, metadatums):
+    "Create batchfile entries for `path`"
     buffer = StringIO()
 
     try:
@@ -105,6 +107,7 @@ def create_batch_list(flac_files: List[str], command_file: str,
             f.write(buffer.read())
 
         f.write("# mfbatch: create batchlist operation complete\n")
+
 
 def main():
     """
