@@ -10,6 +10,7 @@ from argparse import ArgumentParser
 import shlex
 from typing import Callable, List
 import inspect
+from io import StringIO
 
 from tqdm import tqdm
 
@@ -29,6 +30,53 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
+def sort_flac_files(file_list, mode):
+    if mode == 'path':
+        return sorted(file_list)
+    elif mode == 'mtime':
+        return sorted(file_list, key=os.path.getmtime)
+    elif mode == 'ctime':
+        return sorted(file_list, key=os.path.getctime)
+    elif mode == 'name':
+        return sorted(file_list, key=os.path.basename)
+    else:
+        return file_list
+
+
+def write_batchfile_entries_for_file(path, metadatums):
+    buffer = StringIO()
+
+    try:
+        this_file_metadata = metadata_funcs.read_metadata(path)
+
+    except CalledProcessError as e:
+        buffer.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
+                     f"metadata from the file {path}\n\n")
+        return metadatums, buffer
+
+    for this_key, this_value in this_file_metadata.items():
+        if this_key not in metadatums:
+            buffer.write(f":set {this_key} "
+                         f"{shlex.quote(this_value)}\n")
+            metadatums[this_key] = this_value
+        else:
+            if this_value != metadatums[this_key]:
+                buffer.write(f":set {this_key} "
+                             f"{shlex.quote(this_value)}"
+                             "\n")
+                metadatums[this_key] = this_value
+
+    keys = list(metadatums.keys())
+    for key in keys:
+        if key not in this_file_metadata:
+            buffer.write(f":unset {key}\n")
+            del metadatums[key]
+
+    buffer.write(path + "\n\n")
+
+    return metadatums, buffer
+
+
 def create_batch_list(flac_files: List[str], command_file: str,
                       sort_mode='path'):
     """
@@ -36,52 +84,27 @@ def create_batch_list(flac_files: List[str], command_file: str,
     of their metadata.
 
     :param flac_files: Paths of files to create batchfile from 
-    :param command_file: What to name the new batchfile
+    :param command_file: Name of new batchfile
     :param sort_mode: Order of paths in the batch list. Either 'path', 
         'mtime', 'ctime', 'name'
     :param input_files: FLAC files to scan
     """
+
+    flac_files = sort_flac_files(flac_files, sort_mode)
+
     with open(command_file, mode='w', encoding='utf-8') as f:
-        f.write("# mfbatch\n\n")
         metadatums = {}
 
-        if sort_mode == 'path':
-            flac_files = sorted(flac_files)
-        elif sort_mode == 'mtime':
-            flac_files = sorted(flac_files, key=os.path.getmtime)
-        elif sort_mode == 'ctime':
-            flac_files = sorted(flac_files, key=os.path.getctime)
-        elif sort_mode == 'name':
-            flac_files = sorted(flac_files, key=os.path.basename)
+        f.write("# mfbatch\n\n")
 
-        for path in tqdm(flac_files, unit='File', desc='Scanning FLAC files'):
-            try:
-                this_file_metadata = metadata_funcs.read_metadata(path)
-            except CalledProcessError as e:
-                f.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
-                        f"metadata from the file {path}\n\n")
-                continue
+        for path in tqdm(flac_files, unit='File',
+                         desc='Scanning with metaflac...'):
 
-            for this_key, this_value in this_file_metadata.items():
-                if this_key not in metadatums:
-                    f.write(f":set {this_key} "
-                            f"{shlex.quote(this_value)}\n")
-                    metadatums[this_key] = this_value
-                else:
-                    if this_value != metadatums[this_key]:
-                        f.write(f":set {this_key} "
-                                f"{shlex.quote(this_value)}"
-                                "\n")
-                        metadatums[this_key] = this_value
+            metadatums, buffer = write_batchfile_entries_for_file(path,
+                                                                  metadatums)
+            f.write(buffer.read())
 
-            keys = list(metadatums.keys())
-            for key in keys:
-                if key not in this_file_metadata:
-                    f.write(f":unset {key}\n")
-                    del metadatums[key]
-
-            f.write(path + "\n\n")
-
+        f.write("# mfbatch create batchlist operation complete\n")
 
 def main():
     """
@@ -94,8 +117,8 @@ def main():
                     action='store_true',
                     help='create a new list')
     op.add_argument('-F', '--from-file', metavar='FILE_LIST', action='store',
-                    default=None, help="Instead of scanning directory for "
-                    "FLAC files, get file paths from FILE_LIST when creating "
+                    default=None, help="get file paths from FILE_LIST when "
+                    "creating, instead of scanning directory"
                     "a new list")
     op.add_argument('-e', '--edit', action='store_true',
                     help="open batch file in the default editor",
