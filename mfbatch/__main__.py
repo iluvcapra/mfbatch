@@ -75,7 +75,7 @@ def write_batchfile_entries_for_file(path, metadatums) -> Tuple[dict, str]:
             del metadatums[key]
 
     buffer.write(path + "\n\n")
-    
+
     return metadatums, buffer.getvalue()
 
 
