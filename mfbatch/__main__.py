@@ -104,7 +104,7 @@ def create_batch_list(flac_files: List[str], command_file: str,
                                                                   metadatums)
             f.write(buffer.read())
 
-        f.write("# mfbatch create batchlist operation complete\n")
+        f.write("# mfbatch: create batchlist operation complete\n")
 
 def main():
     """
