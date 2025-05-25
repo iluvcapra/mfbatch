@@ -29,7 +29,7 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
-def create_batch_list(flac_files: List[str], command_file: str, 
+def create_batch_list(flac_files: List[str], command_file: str,
                       sort_mode='path'):
     """
     Read all FLAC files in the cwd and create a batchfile that re-creates all
@@ -151,7 +151,8 @@ def main():
         else:
             flac_files = glob('./**/*.flac', recursive=True)
 
-        create_batch_list(flac_files, options.batchfile, sort_mode=options.sort)
+        create_batch_list(flac_files, options.batchfile,
+                          sort_mode=options.sort)
 
     if options.edit:
         mode_given = True
