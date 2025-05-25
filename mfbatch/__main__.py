@@ -146,7 +146,8 @@ def main():
         mode_given = True
 
         if options.from_file:
-            with open(options.from_file, 'r') as from_file:
+            with open(options.from_file, mode='r',
+                      encoding='utf-8') as from_file:
                 flac_files = from_file.readlines()
         else:
             flac_files = glob('./**/*.flac', recursive=True)
