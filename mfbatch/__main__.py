@@ -106,8 +106,7 @@ def main():
                     action='store_true',
                     help='create a new list')
                     
-    # add an option here to get a file list from a file instead of 
-    # from cwd.
+    # add an option here to get a file list from a file instead of from cwd.
     op.add_argument('-e', '--edit', action='store_true',
                     help="open batch file in the default editor",
                     default=False)
