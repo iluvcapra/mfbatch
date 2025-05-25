@@ -8,7 +8,7 @@ from subprocess import CalledProcessError, run
 import sys
 from argparse import ArgumentParser
 import shlex
-from typing import Callable, List
+from typing import Callable, List, Tuple
 import inspect
 from io import StringIO
 
@@ -44,7 +44,7 @@ def sort_flac_files(file_list, mode):
     return file_list
 
 
-def write_batchfile_entries_for_file(path, metadatums):
+def write_batchfile_entries_for_file(path, metadatums) -> Tuple[dict, str]:
     "Create batchfile entries for `path`"
     buffer = StringIO()
 
@@ -54,7 +54,7 @@ def write_batchfile_entries_for_file(path, metadatums):
     except CalledProcessError as e:
         buffer.write(f"# !!! METAFLAC ERROR ({e.returncode}) while reading "
                      f"metadata from the file {path}\n\n")
-        return metadatums, buffer
+        return metadatums, buffer.getvalue()
 
     for this_key, this_value in this_file_metadata.items():
         if this_key not in metadatums:
@@ -75,8 +75,8 @@ def write_batchfile_entries_for_file(path, metadatums):
             del metadatums[key]
 
     buffer.write(path + "\n\n")
-
-    return metadatums, buffer
+    
+    return metadatums, buffer.getvalue()
 
 
 def create_batch_list(flac_files: List[str], command_file: str,
@@ -104,7 +104,7 @@ def create_batch_list(flac_files: List[str], command_file: str,
 
             metadatums, buffer = write_batchfile_entries_for_file(path,
                                                                   metadatums)
-            f.write(buffer.read())
+            f.write(buffer)
 
         f.write("# mfbatch: create batchlist operation complete\n")
 
@@ -170,14 +170,16 @@ def main():
 
     if options.create:
         mode_given = True
+        flac_files: List[str] = []
 
         if options.from_file:
             with open(options.from_file, mode='r',
                       encoding='utf-8') as from_file:
-                flac_files = from_file.readlines()
+                flac_files = [line.strip() for line in from_file.readlines()]
         else:
             flac_files = glob('./**/*.flac', recursive=True)
 
+        # print(flac_files)
         create_batch_list(flac_files, options.batchfile,
                           sort_mode=options.sort)
 
