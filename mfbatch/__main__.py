@@ -8,7 +8,7 @@ from subprocess import CalledProcessError, run
 import sys
 from argparse import ArgumentParser
 import shlex
-from typing import Callable
+from typing import Callable, List
 import inspect
 
 from tqdm import tqdm
@@ -29,33 +29,21 @@ def execute_batch_list(batch_list_path: str, dry_run: bool, interactive: bool):
                 parser.eval(line, line_no, interactive)
 
 
-def create_batch_list(command_file: str, recursive=True, sort_mode='path'):
+def create_batch_list(flac_files: List[str], command_file: str, 
+                      sort_mode='path'):
     """
     Read all FLAC files in the cwd and create a batchfile that re-creates all
     of their metadata.
 
-    :param recursive: Recursively enter directories
+    :param flac_files: Paths of files to create batchfile from 
+    :param command_file: What to name the new batchfile
     :param sort_mode: Order of paths in the batch list. Either 'path', 
         'mtime', 'ctime', 'name'
+    :param input_files: FLAC files to scan
     """
     with open(command_file, mode='w', encoding='utf-8') as f:
         f.write("# mfbatch\n\n")
-#         f.write("""
-# # :set DESCRIPTION ""
-# # :set TITLE ""
-# # :set VERSION ""
-# # :set ALBUM ""
-# # :set ARTIST ""
-# # :set TRACKNUMBER ""
-# # :set COPYRIGHT ""
-# # :set LICENSE ""
-# # :set CONTACT ""
-# # :set ORGAIZATION ""
-# # :set LOCATION ""
-# # :set MICROPHONE ""
-#                 """)
         metadatums = {}
-        flac_files = glob('./**/*.flac', recursive=recursive)
 
         if sort_mode == 'path':
             flac_files = sorted(flac_files)
@@ -105,8 +93,10 @@ def main():
     op.add_argument('-c', '--create', default=False,
                     action='store_true',
                     help='create a new list')
-                    
-    # add an option here to get a file list from a file instead of from cwd.
+    op.add_argument('-F', '--from-file', metavar='FILE_LIST', action='store',
+                    default=None, help="Instead of scanning directory for "
+                    "FLAC files, get file paths from FILE_LIST when creating "
+                    "a new list")
     op.add_argument('-e', '--edit', action='store_true',
                     help="open batch file in the default editor",
                     default=False)
@@ -154,7 +144,14 @@ def main():
 
     if options.create:
         mode_given = True
-        create_batch_list(options.batchfile, sort_mode=options.sort)
+
+        if options.from_file:
+            with open(options.from_file, 'r') as from_file:
+                flac_files = from_file.readlines()
+        else:
+            flac_files = glob('./**/*.flac', recursive=True)
+
+        create_batch_list(flac_files, options.batchfile, sort_mode=options.sort)
 
     if options.edit:
         mode_given = True
