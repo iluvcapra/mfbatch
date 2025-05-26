@@ -115,6 +115,9 @@ class CommandEnv:
         del self.metadatums['_FILENAME']
         del self.metadatums['_FOLDER']
 
+        if '_NEW_BASENAME' in self.metadatums:
+            del self.metadatums['_NEW_BASENAME']
+
     def revert_onces(self):
         """
         Revert all set-once keys.
@@ -192,13 +195,29 @@ they appear in the batchfile.
     def _handle_comment(self, _):
         pass
 
-    def _write_metadata_impl(self, line):
+    def _write_metadata_and_rename_impl(self, line):
         if self.dry_run:
             print("DRY RUN would write metadata here.", file=self.outstream)
+
+            if '_NEW_BASENAME' in self.env.metadatums:
+                self.outstream.write('DRY RUN would rename file here.\n')
         else:
             self.outstream.write("Writing metadata... ")
             self.write_metadata_f(line, self.env.metadatums)
-            self.outstream.write("Complete!")
+            self.outstream.write("Complete!\n")
+
+            if '_NEW_BASENAME' in self.env.metadatums:
+                self.outstream.write("Attempting to rename... ")
+                full_old_path = os.path.abspath(line)
+                new_name = os.path.join(os.path.dirname(full_old_path),
+                                        self.env.metadatums['_NEW_BASENAME'])
+
+                if not os.path.exists(new_name):
+                    os.rename(line, new_name)
+                    self.outstream.write('File renamed!\n')
+                else:
+                    self.outstream.write('File by new name already exists, '
+                                         'rename was not performed.\n')
 
         self.env.increment_all()
         self.env.revert_onces()
@@ -234,10 +253,16 @@ they appear in the batchfile.
 
                 self._print_kv_columnar(key, value)
 
+            if '_NEW_BASENAME' in self.env.metadatums:
+                print("")
+                msg = "File will be renamed:"
+                print(
+                    f"{msg:.<30}  \033[4m{self.env.metadatums['_NEW_BASENAME']}\033[0m\n")
+
             if interactive:
                 val = input('Write? [Y/n/a/:] > ')
                 if val == '' or val[0].upper() == 'Y':
-                    self._write_metadata_impl(line)
+                    self._write_metadata_and_rename_impl(line)
                     break
                 if val.startswith(self.COMMAND_LEADER):
                     self._handle_command(val.lstrip(self.COMMAND_LEADER),
@@ -246,7 +271,7 @@ they appear in the batchfile.
                     print("Aborting write session...", file=sys.stdout)
                     break
             else:
-                self._write_metadata_impl(line)
+                self._write_metadata_and_rename_impl(line)
                 break
 
     def set(self, args):
@@ -321,6 +346,17 @@ they appear in the batchfile.
         pattern = args[2]
         repl = args[3]
         self.env.set_pattern(key, inp, pattern, repl)
+
+    def rename(self, args):
+        """
+        rename NEW-BASENAME
+        Renames the next file to NEW-BASENAME. The existing file is renamed
+        while keeping it in the same directory by appending the dirname and 
+        NEW-BASENAME and performing an mv(1). Renaming occurs after metadata 
+        writing. If a file with NEW-BASENAME already exists in the directory,
+        the action will not be performed.
+        """
+        self.env.set_once('_NEW_BASENAME', args[0])
 
     def d(self, args):
         """
