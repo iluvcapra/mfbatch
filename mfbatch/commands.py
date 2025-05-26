@@ -114,6 +114,9 @@ class CommandEnv:
         del self.metadatums['_ABSPATH']
         del self.metadatums['_FILENAME']
         del self.metadatums['_FOLDER']
+        
+        if '_NEW_BASENAME' in self.metadatums:
+            del self.metadatums['_NEW_BASENAME']
 
     def revert_onces(self):
         """
@@ -195,6 +198,9 @@ they appear in the batchfile.
     def _write_metadata_and_rename_impl(self, line):
         if self.dry_run:
             print("DRY RUN would write metadata here.", file=self.outstream)
+            
+            if '_NEW_BASENAME' in self.env.metadatums:
+                self.outstream.write('DRY RUN would rename file here.\n')
         else:
             self.outstream.write("Writing metadata... ")
             self.write_metadata_f(line, self.env.metadatums)
@@ -202,8 +208,9 @@ they appear in the batchfile.
 
             if '_NEW_BASENAME' in self.env.metadatums:
                 self.outstream.write("Attempting to rename... ")
-                new_name = os.path.basename(line) + \
-                    self.env.metadatums['_NEW_BASENAME']
+                full_old_path = os.path.abspath(line)
+                new_name = os.path.join(os.path.dirname(full_old_path),
+                    self.env.metadatums['_NEW_BASENAME'])
 
                 if not os.path.exists(new_name):
                     os.rename(line, new_name)
@@ -358,6 +365,7 @@ they appear in the batchfile.
         """
         val = args[0]
         self.env.set_once('DESCRIPTION', val)
+
 
     # def picture(self, args):
     #     """
